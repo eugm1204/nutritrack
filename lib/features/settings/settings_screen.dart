@@ -17,7 +17,13 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _goalController;
   late final TextEditingController _weightController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _heightController;
+  late final TextEditingController _targetWeightController;
+  DateTime? _birthDate;
+  String? _sex;
   String _objective = 'maintain';
+  String? _activityLevel;
   bool _saving = false;
   String? _error;
   bool _populated = false;
@@ -27,12 +33,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.initState();
     _goalController = TextEditingController();
     _weightController = TextEditingController();
+    _nameController = TextEditingController();
+    _heightController = TextEditingController();
+    _targetWeightController = TextEditingController();
   }
 
   @override
   void dispose() {
     _goalController.dispose();
     _weightController.dispose();
+    _nameController.dispose();
+    _heightController.dispose();
+    _targetWeightController.dispose();
     super.dispose();
   }
 
@@ -41,7 +53,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _populated = true;
     _goalController.text = '${profile.dailyGoalCalories}';
     _weightController.text = profile.weightKg?.toString() ?? '';
+    _nameController.text = profile.name ?? '';
+    _heightController.text = profile.heightCm?.toString() ?? '';
+    _targetWeightController.text = profile.targetWeightKg?.toString() ?? '';
+    _birthDate = profile.birthDate;
+    _sex = profile.sex;
     _objective = profile.objective;
+    _activityLevel = profile.activityLevel;
   }
 
   Future<void> _save() async {
@@ -66,6 +84,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               dailyGoalCalories: goal,
               weightKg: weight,
               objective: _objective,
+              name: _nameController.text.trim().isEmpty
+                  ? null
+                  : _nameController.text.trim(),
+              birthDate: _birthDate,
+              sex: _sex,
+              heightCm: double.tryParse(_heightController.text.trim()),
+              activityLevel: _activityLevel,
+              targetWeightKg:
+                  double.tryParse(_targetWeightController.text.trim()),
+              onboardingCompleted: true,
             ),
           );
       ref.invalidate(profileProvider);
@@ -164,26 +192,87 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text('Perfil', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Text('Perfil', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 12),
               TextField(
-                controller: _goalController,
-                keyboardType: TextInputType.number,
+                controller: _nameController,
+                textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
-                  labelText: 'Meta diária de calorias (kcal)',
-                  prefixIcon: Icon(Icons.local_fire_department_outlined),
+                  labelText: 'Nome',
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
               const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.cake_outlined),
+                title: Text(
+                  _birthDate == null
+                      ? 'Data de nascimento'
+                      : DateFormat('d MMM yyyy').format(_birthDate!),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _birthDate ?? DateTime(2000),
+                    firstDate: DateTime(1920),
+                    lastDate: DateTime.now(),
+                    helpText: 'Data de nascimento',
+                    cancelText: 'Cancelar',
+                    confirmText: 'OK',
+                  );
+                  if (picked != null) setState(() => _birthDate = picked);
+                },
+              ),
+              const SizedBox(height: 4),
+              SegmentedButton<String?>(
+                segments: const [
+                  ButtonSegment(value: 'male', label: Text('Homem')),
+                  ButtonSegment(value: 'female', label: Text('Mulher')),
+                  ButtonSegment(value: null, label: Text('Prefiro não dizer')),
+                ],
+                selected: {_sex},
+                onSelectionChanged: (selection) =>
+                    setState(() => _sex = selection.first),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _heightController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Altura (cm)',
+                        prefixIcon: Icon(Icons.height),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _weightController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Peso (kg)',
+                        prefixIcon: Icon(Icons.monitor_weight_outlined),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               TextField(
-                controller: _weightController,
+                controller: _targetWeightController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                  labelText: 'Peso (kg) — opcional',
-                  prefixIcon: Icon(Icons.monitor_weight_outlined),
+                  labelText: 'Peso alvo (kg) — opcional',
+                  prefixIcon: Icon(Icons.flag_outlined),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _objective,
                 decoration: const InputDecoration(
@@ -195,6 +284,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     DropdownMenuItem(value: entry.key, child: Text(entry.value)),
                 ],
                 onChanged: (value) => setState(() => _objective = value ?? 'maintain'),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                initialValue: _activityLevel,
+                decoration: const InputDecoration(
+                  labelText: 'Atividade física',
+                  prefixIcon: Icon(Icons.directions_run),
+                ),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Não definido'),
+                  ),
+                  for (final entry in activityLabels.entries)
+                    DropdownMenuItem<String?>(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    ),
+                ],
+                onChanged: (value) => setState(() => _activityLevel = value),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _goalController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Meta diária de calorias (kcal)',
+                  prefixIcon: Icon(Icons.local_fire_department_outlined),
+                ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),

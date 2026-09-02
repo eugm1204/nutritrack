@@ -6,6 +6,13 @@ create table if not exists public.profiles (
   daily_goal_calories int not null default 2200,
   weight_kg real,
   objective text not null default 'maintain',
+  name text,
+  birth_date date,
+  sex text,
+  height_cm real,
+  activity_level text,
+  target_weight_kg real,
+  onboarding_completed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

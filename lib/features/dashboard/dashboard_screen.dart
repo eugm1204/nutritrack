@@ -10,6 +10,7 @@ import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
 import '../auth/auth_controller.dart';
+import '../onboarding/onboarding_screen.dart';
 import 'dashboard_controller.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -24,12 +25,15 @@ class DashboardScreen extends ConsumerWidget {
       body: dashboard.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorView(message: '$error'),
-        data: (state) => RefreshIndicator(
+        data: (state) {
+          if (!state.onboardingCompleted) return const OnboardingScreen();
+          return RefreshIndicator(
           onRefresh: () => ref.refresh(dashboardControllerProvider.future),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               _GradientHeader(
+                name: state.name,
                 onSettings: () => context.push('/settings'),
                 onLogout: () =>
                     ref.read(authControllerProvider.notifier).signOut(),
@@ -86,7 +90,8 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -101,14 +106,20 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _GradientHeader extends StatelessWidget {
+  final String? name;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
 
-  const _GradientHeader({required this.onSettings, required this.onLogout});
+  const _GradientHeader({
+    this.name,
+    required this.onSettings,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final greeting = DashboardScreen._greeting();
     return Container(
       decoration: BoxDecoration(
         gradient: primaryGradientFor(theme.brightness),
@@ -131,7 +142,9 @@ class _GradientHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      DashboardScreen._greeting(),
+                      name != null && name!.trim().isNotEmpty
+                          ? '$greeting, ${name!.trim()}'
+                          : greeting,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -217,6 +230,13 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _Motivation(remaining: remaining, progress: state.progress),
+          if (state.latestWeightKg != null && state.targetWeightKg != null) ...[
+            const SizedBox(height: 8),
+            _TargetWeightChip(
+              current: state.latestWeightKg!,
+              target: state.targetWeightKg!,
+            ),
+          ],
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: state.progress,
@@ -232,6 +252,60 @@ class _HeroCard extends StatelessWidget {
             'Meta diária: $goal kcal',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TargetWeightChip extends StatelessWidget {
+  final double current;
+  final double target;
+
+  const _TargetWeightChip({required this.current, required this.target});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final diff = current - target;
+
+    String text;
+    IconData icon;
+    Color color;
+    if (diff.abs() < 0.25) {
+      text = 'Estás no teu peso alvo! 🎯';
+      icon = Icons.emoji_events_outlined;
+      color = macroCarbsColor;
+    } else if (diff > 0) {
+      text = 'Faltam ${diff.toStringAsFixed(1)} kg para o teu alvo 🎯';
+      icon = Icons.flag_outlined;
+      color = macroProteinColor;
+    } else {
+      text = 'Ultrapassaste o teu alvo em ${diff.abs().toStringAsFixed(1)} kg 🎉';
+      icon = Icons.emoji_events_outlined;
+      color = macroProteinColor;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ),
         ],

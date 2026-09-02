@@ -146,6 +146,7 @@ void main() {
       const profile = Profile(id: 'u1');
       expect(profile.dailyGoalCalories, 2200);
       expect(profile.objective, 'maintain');
+      expect(profile.onboardingCompleted, isFalse);
     });
 
     test('parses json', () {
@@ -154,10 +155,30 @@ void main() {
         'daily_goal_calories': 1800,
         'weight_kg': 72.5,
         'objective': 'lose',
+        'name': 'João',
+        'birth_date': '1990-05-10',
+        'sex': 'male',
+        'height_cm': 178,
+        'activity_level': 'moderate',
+        'target_weight_kg': 68,
+        'onboarding_completed': true,
       });
       expect(profile.dailyGoalCalories, 1800);
       expect(profile.weightKg, 72.5);
       expect(profile.objective, 'lose');
+      expect(profile.name, 'João');
+      expect(profile.birthDate, DateTime(1990, 5, 10));
+      expect(profile.sex, 'male');
+      expect(profile.heightCm, 178);
+      expect(profile.activityLevel, 'moderate');
+      expect(profile.targetWeightKg, 68);
+      expect(profile.onboardingCompleted, isTrue);
+    });
+
+    test('serializes birth date as ISO date', () {
+      final profile = Profile(id: 'u1', birthDate: DateTime(1990, 5, 10));
+      expect(profile.toJson()['birth_date'], '1990-05-10');
+      expect(profile.toJson()['onboarding_completed'], isFalse);
     });
   });
 }

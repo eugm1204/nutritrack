@@ -8,12 +8,20 @@ class DashboardState {
   final List<Meal> meals;
   final int goalCalories;
   final Map<DateTime, int> weekTotals;
+  final bool onboardingCompleted;
+  final String? name;
+  final double? targetWeightKg;
+  final double? latestWeightKg;
 
   const DashboardState({
     required this.date,
     required this.meals,
     required this.goalCalories,
     required this.weekTotals,
+    required this.onboardingCompleted,
+    this.name,
+    this.targetWeightKg,
+    this.latestWeightKg,
   });
 
   int get consumedCalories =>
@@ -51,11 +59,23 @@ class DashboardController extends AsyncNotifier<DashboardState> {
         .watch(mealRepositoryProvider)
         .fetchTotalsForRange(weekStart, today, userId);
 
+    double? latestWeight;
+    try {
+      final entries = await ref.watch(weightRepositoryProvider).fetchEntries(userId);
+      if (entries.isNotEmpty) latestWeight = entries.last.weightKg;
+    } catch (_) {
+      // peso indisponível não bloqueia o dashboard
+    }
+
     return DashboardState(
       date: date,
       meals: meals,
       goalCalories: profile.dailyGoalCalories,
       weekTotals: weekTotals,
+      onboardingCompleted: profile.onboardingCompleted,
+      name: profile.name,
+      targetWeightKg: profile.targetWeightKg,
+      latestWeightKg: latestWeight,
     );
   }
 

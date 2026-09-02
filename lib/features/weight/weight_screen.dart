@@ -17,6 +17,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
   bool _loading = true;
   String? _error;
   List<WeightEntry> _entries = [];
+  double? _targetWeight;
 
   @override
   void initState() {
@@ -31,10 +32,12 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
     });
     try {
       final userId = ref.read(supabaseProvider).auth.currentUser!.id;
+      final profile = await ref.read(profileRepositoryProvider).getOrCreate(userId);
       final entries = await ref.read(weightRepositoryProvider).fetchEntries(userId);
       if (!mounted) return;
       setState(() {
         _entries = entries;
+        _targetWeight = profile.targetWeightKg;
         _loading = false;
       });
     } catch (e) {
@@ -204,7 +207,10 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                   const SizedBox(height: 16),
                                   SizedBox(
                                     height: 180,
-                                    child: _WeightChart(entries: _entries),
+                                    child: _WeightChart(
+                                      entries: _entries,
+                                      targetWeight: _targetWeight,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -243,8 +249,9 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
 
 class _WeightChart extends StatelessWidget {
   final List<WeightEntry> entries;
+  final double? targetWeight;
 
-  const _WeightChart({required this.entries});
+  const _WeightChart({required this.entries, this.targetWeight});
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +260,7 @@ class _WeightChart extends StatelessWidget {
 
     final minW = recent.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
     final maxW = recent.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
+    final target = targetWeight;
     final pad = ((maxW - minW) * 0.15).clamp(0.3, 5.0);
 
     return LineChart(
@@ -271,6 +279,26 @@ class _WeightChart extends StatelessWidget {
         ),
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
+        extraLinesData: ExtraLinesData(
+          horizontalLines: [
+            if (target != null)
+              HorizontalLine(
+                y: target,
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.7),
+                strokeWidth: 1.4,
+                dashArray: [6, 5],
+                label: HorizontalLineLabel(
+                  show: true,
+                  alignment: Alignment.topRight,
+                  labelResolver: (line) => 'alvo ${target.toStringAsFixed(0)}kg',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.tertiary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
+        ),
         titlesData: const FlTitlesData(
           leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
