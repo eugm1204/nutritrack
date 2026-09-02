@@ -44,20 +44,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _sendMagicLink() async {
-    final auth = ref.read(authControllerProvider.notifier);
-    await auth.sendMagicLink(_emailController.text);
-    if (mounted) {
-      final message = ref.read(authControllerProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message ?? 'Verifica o teu email.'),
-          duration: const Duration(seconds: 6),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -140,25 +126,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           : 'Não tens conta? Regista-te',
                     ),
                   ),
-                  if (!_isSignUp) ...[
-                    const Divider(height: 32),
-                    OutlinedButton.icon(
-                      onPressed: loading ? null : _sendMagicLink,
-                      icon: const Icon(Icons.mark_email_read_outlined),
-                      label: const Text('Entrar com link mágico'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(52),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Sem senha — recebes um link por email',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
