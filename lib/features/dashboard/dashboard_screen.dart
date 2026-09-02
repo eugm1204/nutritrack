@@ -14,14 +14,24 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(dashboardControllerProvider);
     final theme = Theme.of(context);
+    final data = dashboard.value;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Hoje · ${DateFormat('d MMM').format(DateTime.now())}',
+          data == null
+              ? 'NutriTrack'
+              : data.isToday
+                  ? 'Hoje · ${DateFormat('d MMM').format(data.date)}'
+                  : DateFormat('EEEE, d MMM').format(data.date),
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today_outlined),
+            tooltip: 'Escolher dia',
+            onPressed: () => _pickDate(context, ref),
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push('/settings'),
@@ -50,7 +60,19 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _WeeklyChart(state: state),
               const SizedBox(height: 24),
-              Text('Refeições', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Refeições', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  if (!state.isToday)
+                    TextButton.icon(
+                      onPressed: () =>
+                          ref.read(dashboardControllerProvider.notifier).goToToday(),
+                      icon: const Icon(Icons.today_outlined, size: 18),
+                      label: const Text('Hoje'),
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
               if (state.meals.isEmpty)
                 const _EmptyMeals()
@@ -408,5 +430,25 @@ class _ErrorView extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> _pickDate(BuildContext context, WidgetRef ref) async {
+  final controller = ref.read(dashboardControllerProvider.notifier);
+  final today = DateTime.now();
+  final initial = ref.read(dashboardControllerProvider).value?.date ?? today;
+
+  final picked = await showDatePicker(
+    context: context,
+    initialDate: initial,
+    firstDate: DateTime(today.year, today.month, today.day).subtract(const Duration(days: 365)),
+    lastDate: today,
+    helpText: 'Escolher dia',
+    cancelText: 'Cancelar',
+    confirmText: 'Ver dia',
+  );
+
+  if (picked != null) {
+    await controller.selectDate(picked);
   }
 }

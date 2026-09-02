@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../models/meal_item.dart';
 import 'add_meal_controller.dart';
+import 'editable_item_tile.dart';
 
 class AddMealScreen extends ConsumerStatefulWidget {
   const AddMealScreen({super.key});
@@ -28,7 +29,7 @@ class _AddMealScreenState extends ConsumerState<AddMealScreen> {
       debugPrint('[pickImage] Erro: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao abrir câmara/galeria: $e')),
+          SnackBar(content: Text('Erro ao abrir cÃ¢mara/galeria: $e')),
         );
       }
     }
@@ -39,7 +40,7 @@ class _AddMealScreenState extends ConsumerState<AddMealScreen> {
     final state = ref.watch(addMealControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Adicionar refeição')),
+      appBar: AppBar(title: const Text('Adicionar refeiÃ§Ã£o')),
       body: switch (state.step) {
         AddMealStep.pick => _PickView(
             onCamera: () => _pickImage(ImageSource.camera),
@@ -97,6 +98,12 @@ class _PickView extends StatelessWidget {
             icon: const Icon(Icons.photo_library_outlined),
             label: const Text('Escolher da galeria'),
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+          ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () => context.push('/manual-add'),
+            icon: const Icon(Icons.edit_note),
+            label: const Text('Adicionar sem foto (banco de alimentos)'),
           ),
         ],
       ),
@@ -190,7 +197,7 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
               controller: _nameController,
               onChanged: controller.updateMealName,
               decoration: const InputDecoration(
-                labelText: 'Nome da refeição',
+                labelText: 'Nome da refeiÃ§Ã£o',
                 prefixIcon: Icon(Icons.label_outline),
               ),
             ),
@@ -198,7 +205,7 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
             for (var i = 0; i < state.items.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: _EditableItemTile(
+                child: EditableItemTile(
                   item: state.items[i],
                   onChanged: (name, calories) =>
                       controller.updateItem(i, name, calories),
@@ -249,94 +256,10 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.check),
-            label: Text(widget.saving ? 'A guardar...' : 'Guardar refeição'),
+            label: Text(widget.saving ? 'A guardar...' : 'Guardar refeiÃ§Ã£o'),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _EditableItemTile extends StatefulWidget {
-  final MealItem item;
-  final void Function(String name, int calories) onChanged;
-  final VoidCallback onRemove;
-
-  const _EditableItemTile({
-    required this.item,
-    required this.onChanged,
-    required this.onRemove,
-  });
-
-  @override
-  State<_EditableItemTile> createState() => _EditableItemTileState();
-}
-
-class _EditableItemTileState extends State<_EditableItemTile> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _caloriesController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.item.name);
-    _caloriesController = TextEditingController(text: '${widget.item.calories}');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _caloriesController.dispose();
-    super.dispose();
-  }
-
-  void _emit() {
-    widget.onChanged(
-      _nameController.text.trim(),
-      int.tryParse(_caloriesController.text) ?? 0,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: _nameController,
-                onChanged: (_) => _emit(),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  labelText: 'Alimento',
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 110,
-              child: TextField(
-                controller: _caloriesController,
-                keyboardType: TextInputType.number,
-                onChanged: (_) => _emit(),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  labelText: 'kcal',
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: widget.onRemove,
-              icon: const Icon(Icons.delete_outline),
-              color: theme.colorScheme.error,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/config.dart';
 import '../../providers/providers.dart';
 
 class AuthState {
@@ -80,6 +81,25 @@ class AuthController extends Notifier<AuthState> {
       return false;
     } catch (e) {
       _log(e, 'signup');
+      state = state.copyWith(loading: false, error: _message(e));
+      return false;
+    }
+  }
+
+  Future<bool> sendMagicLink(String email) async {
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      await ref.read(supabaseProvider).auth.signInWithOtp(
+            email: email.trim(),
+            emailRedirectTo: AppConfig.webAppUrl,
+          );
+      state = state.copyWith(
+        loading: false,
+        error: 'Enviamos um link para o teu email. Abre-o para entrar.',
+      );
+      return true;
+    } catch (e) {
+      _log(e, 'magiclink');
       state = state.copyWith(loading: false, error: _message(e));
       return false;
     }

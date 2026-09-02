@@ -16,6 +16,9 @@ App de tracking de calorias com estimativa por foto via IA (Gemini).
 ## Funcionalidades
 
 - 📷 Foto do prato → IA estima calorias e itens (editáveis antes de guardar)
+- 🍎 Adicionar sem foto: banco de alimentos (Open Food Facts + lista local) ou registo manual
+- 🔑 Login com senha ou link mágico (email)
+- 📅 Histórico: ver/apagar refeições de dias anteriores
 - 🎯 Meta diária de calorias com anel de progresso
 - 📊 Gráfico dos últimos 7 dias
 - ⚙️ Definições: meta diária, peso e objetivo (perder/manter/ganhar)

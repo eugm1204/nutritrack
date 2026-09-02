@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
+import '../services/food_search_service.dart';
 import '../services/meal_repository.dart';
 import '../services/profile_repository.dart';
 import '../services/vision_service.dart';
@@ -18,6 +19,10 @@ final mealRepositoryProvider = Provider<MealRepository>(
 
 final profileRepositoryProvider = Provider<ProfileRepository>(
   (ref) => ProfileRepository(ref.watch(supabaseProvider)),
+);
+
+final foodSearchServiceProvider = Provider<FoodSearchService>(
+  (ref) => FoodSearchService(),
 );
 
 final profileProvider = FutureProvider<Profile>((ref) async {

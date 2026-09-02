@@ -20,6 +20,9 @@ jobs:
 
       - run: flutter pub get
 
+      - name: Run tests
+        run: flutter test
+
       - name: Build web
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
