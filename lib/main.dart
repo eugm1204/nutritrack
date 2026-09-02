@@ -9,6 +9,7 @@ import 'package:web/web.dart' as web;
 import 'core/config.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
+import 'features/splash/splash_gate.dart';
 
 final updateAvailableNotifier = ValueNotifier<bool>(false);
 
@@ -67,43 +68,45 @@ class NutriTrackApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       routerConfig: appRouter,
       builder: (context, child) {
-        return Column(
-          children: [
-            ValueListenableBuilder<bool>(
-              valueListenable: updateAvailableNotifier,
-              builder: (context, show, _) {
-                if (!show) return const SizedBox.shrink();
-                final scheme = Theme.of(context).colorScheme;
-                return Material(
-                  color: scheme.inverseSurface,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Nova versão disponível!',
-                              style: TextStyle(
-                                color: scheme.onInverseSurface,
-                                fontWeight: FontWeight.w600,
+        return SplashGate(
+          child: Column(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: updateAvailableNotifier,
+                builder: (context, show, _) {
+                  if (!show) return const SizedBox.shrink();
+                  final scheme = Theme.of(context).colorScheme;
+                  return Material(
+                    color: scheme.inverseSurface,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Nova versão disponível!',
+                                style: TextStyle(
+                                  color: scheme.onInverseSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () => web.window.location.reload(),
-                            child: const Text('Atualizar'),
-                          ),
-                        ],
+                            TextButton(
+                              onPressed: () => web.window.location.reload(),
+                              child: const Text('Atualizar'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            Expanded(child: child ?? const SizedBox.shrink()),
-          ],
+                  );
+                },
+              ),
+              Expanded(child: child ?? const SizedBox.shrink()),
+            ],
+          ),
         );
       },
     );

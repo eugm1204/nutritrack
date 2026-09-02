@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme.dart';
+import '../../widgets/animated_list_item.dart';
+import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
 import '../auth/auth_controller.dart';
@@ -19,67 +21,69 @@ class DashboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _greeting(),
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            Text(
-              DateFormat('EEEE, d MMM').format(DateTime.now()),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Definições',
-            onPressed: () => context.push('/settings'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Terminar sessão',
-            onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
-          ),
-        ],
-      ),
       body: dashboard.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorView(message: '$error'),
         data: (state) => RefreshIndicator(
           onRefresh: () => ref.refresh(dashboardControllerProvider.future),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            padding: EdgeInsets.zero,
             children: [
-              _HeroCard(state: state),
-              const SizedBox(height: 16),
-              _WeeklyChart(state: state),
-              const SizedBox(height: 20),
-              Text(
-                'Refeições 🍽️',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              _GradientHeader(
+                onSettings: () => context.push('/settings'),
+                onLogout: () =>
+                    ref.read(authControllerProvider.notifier).signOut(),
               ),
-              const SizedBox(height: 8),
-              if (state.meals.isEmpty)
-                const _EmptyMeals()
-              else
-                ...state.meals.map(
-                  (meal) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: MealCard(
-                      meal: meal,
-                      onTap: () => context.push('/meal', extra: meal),
-                      onDelete: () => ref
-                          .read(dashboardControllerProvider.notifier)
-                          .deleteMeal(meal.id),
-                    ),
-                  ),
+              Transform.translate(
+                offset: const Offset(0, -30),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _HeroCard(state: state),
                 ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    _WeeklyChart(state: state),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Refeições 🍽️',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 8),
+                    if (state.meals.isEmpty)
+                      const _EmptyMeals()
+                    else
+                      for (var i = 0; i < state.meals.length; i++)
+                        AnimatedListItem(
+                          index: i,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Dismissible(
+                              key: ValueKey('meal-${state.meals[i].id}'),
+                              direction: DismissDirection.endToStart,
+                              onDismissed: (_) => ref
+                                  .read(dashboardControllerProvider.notifier)
+                                  .deleteMeal(state.meals[i].id),
+                              background: _DeleteBackground(),
+                              child: MealCard(
+                                meal: state.meals[i],
+                                onTap: () =>
+                                    context.push('/meal', extra: state.meals[i]),
+                                onDelete: () => ref
+                                    .read(dashboardControllerProvider.notifier)
+                                    .deleteMeal(state.meals[i].id),
+                              ),
+                            ),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -93,6 +97,74 @@ class DashboardScreen extends ConsumerWidget {
     if (h < 12) return 'Bom dia ☀️';
     if (h < 19) return 'Boa tarde 🌤️';
     return 'Boa noite 🌙';
+  }
+}
+
+class _GradientHeader extends StatelessWidget {
+  final VoidCallback onSettings;
+  final VoidCallback onLogout;
+
+  const _GradientHeader({required this.onSettings, required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        gradient: primaryGradientFor(theme.brightness),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        MediaQuery.of(context).padding.top + 12,
+        12,
+        64,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      DashboardScreen._greeting(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('EEEE, d MMM').format(DateTime.now()),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                tooltip: 'Definições',
+                onPressed: onSettings,
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                tooltip: 'Terminar sessão',
+                onPressed: onLogout,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -119,20 +191,23 @@ class _HeroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$remaining kcal',
+                    CountUpText(
+                      target: remaining < 0 ? 0 : remaining,
                       style: theme.textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                          ?.copyWith(fontWeight: FontWeight.w900),
                     ),
                     Text(
-                      remaining >= 0 ? 'restantes hoje' : 'acima da meta',
+                      remaining >= 0 ? 'kcal restantes hoje' : 'acima da meta',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    _MacroChips(state: state),
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
               AnimatedCalorieRing(
                 progress: state.progress,
                 consumed: consumed,
@@ -142,8 +217,6 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _Motivation(remaining: remaining, progress: state.progress),
-          const SizedBox(height: 12),
-          _MacroChips(state: state),
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: state.progress,
@@ -206,7 +279,7 @@ class _Motivation extends StatelessWidget {
       child: Text(
         message,
         style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: theme.colorScheme.primary,
         ),
       ),
@@ -221,12 +294,10 @@ class _MacroChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double sum(double? Function(dynamic item) extract) =>
-        state.meals.fold<double>(
-            0,
-            (acc, meal) => acc +
-                meal.items.fold<double>(
-                    0, (a, item) => a + (extract(item) ?? 0)));
+    double sum(double? Function(dynamic item) extract) => state.meals.fold<double>(
+        0,
+        (acc, meal) =>
+            acc + meal.items.fold<double>(0, (a, item) => a + (extract(item) ?? 0)));
 
     final protein = sum((item) => item.protein);
     final carbs = sum((item) => item.carbs);
@@ -236,21 +307,9 @@ class _MacroChips extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _MacroChip(
-          label: 'Proteína',
-          value: protein,
-          color: macroProteinColor,
-        ),
-        _MacroChip(
-          label: 'Hidratos',
-          value: carbs,
-          color: macroCarbsColor,
-        ),
-        _MacroChip(
-          label: 'Gordura',
-          value: fat,
-          color: macroFatColor,
-        ),
+        _MacroChip(label: 'Proteína', value: protein, color: macroProteinColor),
+        _MacroChip(label: 'Hidratos', value: carbs, color: macroCarbsColor),
+        _MacroChip(label: 'Gordura', value: fat, color: macroFatColor),
       ],
     );
   }
@@ -284,7 +343,7 @@ class _MacroChip extends StatelessWidget {
           Text(
             '$label ${value.toStringAsFixed(0)}g',
             style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: color,
             ),
           ),
@@ -310,8 +369,8 @@ class AnimatedCalorieRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SizedBox(
-      width: 116,
-      height: 116,
+      width: 118,
+      height: 118,
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: progress),
         duration: const Duration(milliseconds: 900),
@@ -326,10 +385,10 @@ class AnimatedCalorieRing extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '$consumed',
+                CountUpText(
+                  target: consumed,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 Text(
@@ -366,6 +425,14 @@ class _RingPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..color = trackColor;
     canvas.drawCircle(center, radius, track);
+
+    final glow = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke + 7
+      ..strokeCap = StrokeCap.round
+      ..color = color.withValues(alpha: 0.25)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9);
+    canvas.drawArc(rect, -1.5708, progress * 6.2832, false, glow);
 
     final arc = Paint()
       ..style = PaintingStyle.stroke
@@ -486,6 +553,22 @@ class _WeeklyChart extends StatelessWidget {
   String _dayAbbrev(DateTime day) {
     const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     return weekdays[day.weekday - 1];
+  }
+}
+
+class _DeleteBackground extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.error,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white),
+    );
   }
 }
 

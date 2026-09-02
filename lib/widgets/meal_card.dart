@@ -120,20 +120,28 @@ class _MealThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = 58.0;
-    final clip = ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: meal.imageUrl != null
-            ? Image.network(
-                meal.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _fallback(),
-              )
-            : _fallback(),
+    final thumb = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.14),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
+      child: meal.imageUrl != null
+          ? Image.network(
+              meal.imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _fallback(),
+            )
+          : _fallback(),
     );
+    final clip = ClipRRect(borderRadius: BorderRadius.circular(14), child: thumb);
     return showHero
         ? Hero(tag: 'meal-image-${meal.id}', child: clip)
         : clip;

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../models/meal.dart';
+import '../../widgets/animated_list_item.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
 import 'history_controller.dart';
@@ -43,18 +44,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                for (final day in days) ...[
-                  _DayCard(
-                    day: day,
-                    meals: state.mealsByDay[day]!,
-                    goalCalories: state.goalCalories,
-                    expanded: _expandedDay == day,
-                    onTap: () => setState(() {
-                      _expandedDay = _expandedDay == day ? null : day;
-                    }),
-                    onDelete: (meal) => ref
-                        .read(historyControllerProvider.notifier)
-                        .deleteMeal(meal.id),
+                for (var i = 0; i < days.length; i++) ...[
+                  AnimatedListItem(
+                    index: i,
+                    child: _DayCard(
+                      day: days[i],
+                      meals: state.mealsByDay[days[i]]!,
+                      goalCalories: state.goalCalories,
+                      expanded: _expandedDay == days[i],
+                      onTap: () => setState(() {
+                        _expandedDay = _expandedDay == days[i] ? null : days[i];
+                      }),
+                      onDelete: (meal) => ref
+                          .read(historyControllerProvider.notifier)
+                          .deleteMeal(meal.id),
+                    ),
                   ),
                   const SizedBox(height: 10),
                 ],
