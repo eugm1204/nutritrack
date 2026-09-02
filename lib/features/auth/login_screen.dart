@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -60,8 +61,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.restaurant_menu, size: 72, color: theme.colorScheme.primary),
-                  const SizedBox(height: 12),
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      gradient: primaryGradient,
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.restaurant_menu,
+                      size: 52,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'NutriTrack',
                     textAlign: TextAlign.center,

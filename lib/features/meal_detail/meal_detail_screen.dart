@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
@@ -136,16 +137,19 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
             children: [
               if (widget.meal.imageUrl != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    widget.meal.imageUrl!,
-                    height: 180,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
+                Hero(
+                  tag: 'meal-image-${widget.meal.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      widget.meal.imageUrl!,
                       height: 180,
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: const Icon(Icons.image_outlined, size: 48),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        height: 180,
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: const Icon(Icons.image_outlined, size: 48),
+                      ),
                     ),
                   ),
                 ),
@@ -282,15 +286,31 @@ class _MacroRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.bodySmall?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
     return Wrap(
       spacing: 16,
+      runSpacing: 6,
       children: [
-        Text('Proteína ${protein.toStringAsFixed(0)}g', style: style),
-        Text('Hidratos ${carbs.toStringAsFixed(0)}g', style: style),
-        Text('Gordura ${fat.toStringAsFixed(0)}g', style: style),
+        Text(
+          'Proteína ${protein.toStringAsFixed(0)}g',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: macroProteinColor,
+          ),
+        ),
+        Text(
+          'Hidratos ${carbs.toStringAsFixed(0)}g',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: macroCarbsColor,
+          ),
+        ),
+        Text(
+          'Gordura ${fat.toStringAsFixed(0)}g',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: macroFatColor,
+          ),
+        ),
       ],
     );
   }

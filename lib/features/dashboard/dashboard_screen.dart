@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme.dart';
+import '../../widgets/meal_card.dart';
+import '../../widgets/pressable_card.dart';
 import '../auth/auth_controller.dart';
 import 'dashboard_controller.dart';
 
@@ -14,31 +17,28 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(dashboardControllerProvider);
     final theme = Theme.of(context);
-    final data = dashboard.value;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          data == null
-              ? 'NutriTrack'
-              : data.isToday
-                  ? 'Hoje · ${DateFormat('d MMM').format(data.date)}'
-                  : DateFormat('EEEE, d MMM').format(data.date),
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _greeting(),
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            Text(
+              DateFormat('EEEE, d MMM').format(DateTime.now()),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_today_outlined),
-            tooltip: 'Escolher dia',
-            onPressed: () => _pickDate(context, ref),
-          ),
-          IconButton(
-            icon: const Icon(Icons.monitor_weight_outlined),
-            tooltip: 'Peso',
-            onPressed: () => context.push('/weight'),
-          ),
-          IconButton(
             icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Definições',
             onPressed: () => context.push('/settings'),
           ),
           IconButton(
@@ -48,11 +48,6 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/capture'),
-        icon: const Icon(Icons.add_a_photo_outlined),
-        label: const Text('Adicionar'),
-      ),
       body: dashboard.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorView(message: '$error'),
@@ -61,44 +56,50 @@ class DashboardScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
             children: [
-              _CalorieRingCard(state: state),
+              _HeroCard(state: state),
               const SizedBox(height: 16),
               _WeeklyChart(state: state),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Refeições', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  if (!state.isToday)
-                    TextButton.icon(
-                      onPressed: () =>
-                          ref.read(dashboardControllerProvider.notifier).goToToday(),
-                      icon: const Icon(Icons.today_outlined, size: 18),
-                      label: const Text('Hoje'),
-                    ),
-                ],
+              const SizedBox(height: 20),
+              Text(
+                'Refeições 🍽️',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               if (state.meals.isEmpty)
                 const _EmptyMeals()
               else
-                ...state.meals.map((meal) => _MealCard(
+                ...state.meals.map(
+                  (meal) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: MealCard(
                       meal: meal,
                       onTap: () => context.push('/meal', extra: meal),
-                      onDelete: () => ref.read(dashboardControllerProvider.notifier).deleteMeal(meal.id),
-                    )),
+                      onDelete: () => ref
+                          .read(dashboardControllerProvider.notifier)
+                          .deleteMeal(meal.id),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
       ),
     );
   }
+
+  static String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 6) return 'Boa noite 🌙';
+    if (h < 12) return 'Bom dia ☀️';
+    if (h < 19) return 'Boa tarde 🌤️';
+    return 'Boa noite 🌙';
+  }
 }
 
-class _CalorieRingCard extends StatelessWidget {
+class _HeroCard extends StatelessWidget {
   final DashboardState state;
 
-  const _CalorieRingCard({required this.state});
+  const _HeroCard({required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -107,87 +108,238 @@ class _CalorieRingCard extends StatelessWidget {
     final remaining = state.remainingCalories;
     final goal = state.goalCalories;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            _CalorieRing(progress: state.progress, consumed: consumed, goal: goal),
-            const SizedBox(width: 24),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$remaining kcal',
-                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    remaining >= 0 ? 'restantes hoje' : 'acima da meta',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+    return PressableCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$remaining kcal',
+                      style: theme.textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  LinearProgressIndicator(
-                    value: state.progress,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
-                    color: remaining >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Meta diária: $goal kcal',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    Text(
+                      remaining >= 0 ? 'restantes hoje' : 'acima da meta',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              AnimatedCalorieRing(
+                progress: state.progress,
+                consumed: consumed,
+                goal: goal,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _Motivation(remaining: remaining, progress: state.progress),
+          const SizedBox(height: 12),
+          _MacroChips(state: state),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: state.progress,
+            minHeight: 10,
+            borderRadius: BorderRadius.circular(5),
+            color: remaining >= 0
+                ? theme.colorScheme.primary
+                : theme.colorScheme.error,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Meta diária: $goal kcal',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Motivation extends StatelessWidget {
+  final int remaining;
+  final double progress;
+
+  const _Motivation({required this.remaining, required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    String message;
+    if (remaining <= 0) {
+      message = 'Já ultrapassaste a meta de hoje! 🎉';
+    } else if (progress == 0) {
+      message = 'Regista a primeira refeição para começar! 💪';
+    } else if (progress < 0.3) {
+      message = 'Bom começo! Continua assim 💪';
+    } else if (progress < 0.7) {
+      message = 'Vais a bom caminho! 🔥';
+    } else if (progress < 0.9) {
+      message = 'Quase lá! Só faltam $remaining kcal 🥗';
+    } else {
+      message = 'Só faltam $remaining kcal — não desistas! 🏁';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.12),
+            theme.colorScheme.primary.withValues(alpha: 0.04),
           ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        message,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.primary,
         ),
       ),
     );
   }
 }
 
-class _CalorieRing extends StatelessWidget {
+class _MacroChips extends StatelessWidget {
+  final DashboardState state;
+
+  const _MacroChips({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    double sum(double? Function(dynamic item) extract) =>
+        state.meals.fold<double>(
+            0,
+            (acc, meal) => acc +
+                meal.items.fold<double>(
+                    0, (a, item) => a + (extract(item) ?? 0)));
+
+    final protein = sum((item) => item.protein);
+    final carbs = sum((item) => item.carbs);
+    final fat = sum((item) => item.fat);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _MacroChip(
+          label: 'Proteína',
+          value: protein,
+          color: macroProteinColor,
+        ),
+        _MacroChip(
+          label: 'Hidratos',
+          value: carbs,
+          color: macroCarbsColor,
+        ),
+        _MacroChip(
+          label: 'Gordura',
+          value: fat,
+          color: macroFatColor,
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroChip extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+
+  const _MacroChip({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$label ${value.toStringAsFixed(0)}g',
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AnimatedCalorieRing extends StatelessWidget {
   final double progress;
   final int consumed;
   final int goal;
 
-  const _CalorieRing({required this.progress, required this.consumed, required this.goal});
+  const AnimatedCalorieRing({
+    super.key,
+    required this.progress,
+    required this.consumed,
+    required this.goal,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SizedBox(
-      width: 130,
-      height: 130,
-      child: CustomPaint(
-        painter: _RingPainter(
-          progress: progress,
-          color: theme.colorScheme.primary,
-          trackColor: theme.colorScheme.surfaceContainerHighest,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$consumed',
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              Text(
-                'de $goal',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+      width: 116,
+      height: 116,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: progress),
+        duration: const Duration(milliseconds: 900),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, _) => CustomPaint(
+          painter: _RingPainter(
+            progress: value,
+            color: theme.colorScheme.primary,
+            trackColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$consumed',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  'de $goal',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -204,7 +356,7 @@ class _RingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const stroke = 14.0;
+    const stroke = 13.0;
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - stroke) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
@@ -219,7 +371,11 @@ class _RingPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
-      ..color = color;
+      ..shader = SweepGradient(
+        startAngle: -1.5708,
+        endAngle: -1.5708 + 6.2832,
+        colors: [color, color.withValues(alpha: 0.55)],
+      ).createShader(rect);
     canvas.drawArc(rect, -1.5708, progress * 6.2832, false, arc);
   }
 
@@ -246,72 +402,83 @@ class _WeeklyChart extends StatelessWidget {
 
     final maxY = bars.fold<int>(0, (m, b) => b.total > m ? b.total : m);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Últimos 7 dias', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 140,
-              child: BarChart(
-                BarChartData(
-                  maxY: (maxY * 1.2).clamp(100, double.infinity),
-                  barTouchData: BarTouchData(
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) =>
-                          BarTooltipItem('${rod.toY.round()} kcal', theme.textTheme.bodySmall!),
-                    ),
+    return PressableCard(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Últimos 7 dias 📊',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 140,
+            child: BarChart(
+              BarChartData(
+                maxY: (maxY * 1.2).clamp(100, double.infinity),
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+                        BarTooltipItem('${rod.toY.round()} kcal', theme.textTheme.bodySmall!),
                   ),
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index < 0 || index >= bars.length) return const SizedBox.shrink();
-                          final isToday = index == 6;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              isToday ? 'Hoje' : _dayAbbrev(bars[index].day),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                                color: isToday
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    HorizontalLine(
+                      y: state.goalCalories.toDouble(),
+                      color: theme.colorScheme.tertiary.withValues(alpha: 0.6),
+                      strokeWidth: 1.4,
+                      dashArray: [6, 5],
                     ),
-                  ),
-                  barGroups: [
-                    for (var i = 0; i < bars.length; i++)
-                      BarChartGroupData(x: i, barRods: [
-                        BarChartRodData(
-                          toY: bars[i].total.toDouble(),
-                          width: 18,
-                          borderRadius: BorderRadius.circular(6),
-                          color: i == 6
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.primary.withValues(alpha: 0.35),
-                        ),
-                      ]),
                   ],
                 ),
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 || index >= bars.length) return const SizedBox.shrink();
+                        final isToday = index == 6;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            isToday ? 'Hoje' : _dayAbbrev(bars[index].day),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                              color: isToday
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                barGroups: [
+                  for (var i = 0; i < bars.length; i++)
+                    BarChartGroupData(x: i, barRods: [
+                      BarChartRodData(
+                        toY: bars[i].total.toDouble(),
+                        width: 18,
+                        borderRadius: BorderRadius.circular(7),
+                        color: i == 6
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.primary.withValues(alpha: 0.32),
+                      ),
+                    ]),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -322,97 +489,26 @@ class _WeeklyChart extends StatelessWidget {
   }
 }
 
-class _MealCard extends StatelessWidget {
-  final dynamic meal;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
-
-  const _MealCard({required this.meal, required this.onTap, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: meal.imageUrl != null
-              ? Image.network(
-                  meal.imageUrl,
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const _MealPlaceholder(),
-                )
-              : const _MealPlaceholder(),
-        ),
-        title: Text(meal.mealName, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(
-          '${meal.itemCount} item(s) · ${DateFormat('HH:mm').format(meal.consumedAt)}',
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-        ),
-        trailing: Text(
-          '${meal.totalCalories} kcal',
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        onTap: onTap,
-        onLongPress: () => _confirmDelete(context),
-      ),
-    );
-  }
-
-  Future<void> _confirmDelete(BuildContext context) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Apagar refeição'),
-        content: const Text('Tens a certeza que queres apagar esta refeição?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Apagar')),
-        ],
-      ),
-    );
-    if (ok == true) onDelete();
-  }
-}
-
-class _MealPlaceholder extends StatelessWidget {
-  const _MealPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      height: 56,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Icon(Icons.restaurant, color: Theme.of(context).colorScheme.onSurfaceVariant),
-    );
-  }
-}
-
 class _EmptyMeals extends StatelessWidget {
   const _EmptyMeals();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          children: [
-            Icon(Icons.restaurant_menu, size: 42, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 10),
-            Text(
-              'Ainda não registaste refeições hoje.\nTira uma foto ao teu prato para começar.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+    return PressableCard(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        children: [
+          const Text('🍽️', style: TextStyle(fontSize: 44)),
+          const SizedBox(height: 10),
+          Text(
+            'Ainda não registaste refeições hoje.\nTira uma foto ao teu prato para começar!',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -438,25 +534,5 @@ class _ErrorView extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-Future<void> _pickDate(BuildContext context, WidgetRef ref) async {
-  final controller = ref.read(dashboardControllerProvider.notifier);
-  final today = DateTime.now();
-  final initial = ref.read(dashboardControllerProvider).value?.date ?? today;
-
-  final picked = await showDatePicker(
-    context: context,
-    initialDate: initial,
-    firstDate: DateTime(today.year, today.month, today.day).subtract(const Duration(days: 365)),
-    lastDate: today,
-    helpText: 'Escolher dia',
-    cancelText: 'Cancelar',
-    confirmText: 'Ver dia',
-  );
-
-  if (picked != null) {
-    await controller.selectDate(picked);
   }
 }

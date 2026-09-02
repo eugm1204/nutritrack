@@ -103,6 +103,25 @@ class MealRepository {
     return rows.map(Meal.fromJson).toList();
   }
 
+  Future<List<Meal>> fetchMealsForRange(
+    DateTime from,
+    DateTime to,
+    String userId,
+  ) async {
+    final start = DateTime(from.year, from.month, from.day);
+    final end = DateTime(to.year, to.month, to.day).add(const Duration(days: 1));
+
+    final rows = await _client
+        .from('meals')
+        .select()
+        .eq('user_id', userId)
+        .gte('consumed_at', start.toUtc().toIso8601String())
+        .lt('consumed_at', end.toUtc().toIso8601String())
+        .order('consumed_at', ascending: true);
+
+    return rows.map(Meal.fromJson).toList();
+  }
+
   Future<Map<DateTime, int>> fetchTotalsForRange(
     DateTime from,
     DateTime to,
