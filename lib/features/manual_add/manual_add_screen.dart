@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
 import '../../services/food_search_service.dart';
+import '../../widgets/portion_control.dart';
 import '../add_meal/editable_item_tile.dart';
 import 'manual_add_controller.dart';
 
@@ -84,11 +85,25 @@ class _ManualAddScreenState extends ConsumerState<ManualAddScreen> {
                 for (var i = 0; i < state.items.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: EditableItemTile(
-                      item: state.items[i],
-                      onChanged: (name, calories) =>
-                          controller.updateItem(i, name, calories),
-                      onRemove: () => controller.removeItem(i),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        EditableItemTile(
+                          item: state.items[i],
+                          onChanged: (name, calories) =>
+                              controller.updateItem(i, name, calories),
+                          onRemove: () => controller.removeItem(i),
+                        ),
+                        if (i < state.baseItems.length &&
+                            (state.baseItems[i].grams != null ||
+                                state.baseItems[i].calories > 0))
+                          PortionControl(
+                            item: state.items[i],
+                            base: state.baseItems[i],
+                            onPortionChanged: (mult) =>
+                                controller.setPortion(i, mult),
+                          ),
+                      ],
                     ),
                   ),
               const SizedBox(height: 8),

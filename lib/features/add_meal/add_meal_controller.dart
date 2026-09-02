@@ -15,6 +15,7 @@ class AddMealState {
   final String? imageUrl;
   final String mealName;
   final List<MealItem> items;
+  final List<MealItem> baseItems;
   final String? error;
 
   const AddMealState({
@@ -24,6 +25,7 @@ class AddMealState {
     this.imageUrl,
     this.mealName = 'Refeição',
     this.items = const [],
+    this.baseItems = const [],
     this.error,
   });
 
@@ -36,6 +38,7 @@ class AddMealState {
     String? imageUrl,
     String? mealName,
     List<MealItem>? items,
+    List<MealItem>? baseItems,
     String? error,
     bool clearError = false,
   }) {
@@ -46,6 +49,7 @@ class AddMealState {
       imageUrl: imageUrl ?? this.imageUrl,
       mealName: mealName ?? this.mealName,
       items: items ?? this.items,
+      baseItems: baseItems ?? this.baseItems,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -95,21 +99,25 @@ class AddMealController extends Notifier<AddMealState> {
       final analysis = await ref.read(visionServiceProvider).analyzeMeal(imageUrl);
       debugPrint('[analyzeImage] Análise OK: ${analysis.items.length} itens');
 
+      final converted = analysis.items
+          .map((item) => MealItem(
+                name: item.name,
+                calories: item.calories,
+                protein: item.protein,
+                carbs: item.carbs,
+                fat: item.fat,
+                grams: item.grams,
+                portionRef: item.portionRef,
+                confidence: item.confidence,
+              ))
+          .toList();
+
       state = state.copyWith(
         step: AddMealStep.confirm,
         mealName: analysis.mealName,
         imageUrl: imageUrl,
-        items: analysis.items
-            .map((item) => MealItem(
-                  name: item.name,
-                  calories: item.calories,
-                  protein: item.protein,
-                  carbs: item.carbs,
-                  fat: item.fat,
-                  grams: item.grams,
-                  confidence: item.confidence,
-                ))
-            .toList(),
+        items: converted,
+        baseItems: converted,
       );
     } catch (e) {
       debugPrint('[analyzeImage] Erro no fluxo: $e');
@@ -126,17 +134,29 @@ class AddMealController extends Notifier<AddMealState> {
 
   void updateItem(int index, String? name, int? calories) {
     final items = [...state.items];
-    items[index] = items[index].copyWith(
+    final updated = items[index].copyWith(
       name: name,
       calories: calories,
       confirmed: true,
     );
+    items[index] = updated;
+
+    final baseItems = [...state.baseItems];
+    baseItems[index] = updated;
+
+    state = state.copyWith(items: items, baseItems: baseItems);
+  }
+
+  void setPortion(int index, double multiplier) {
+    final items = [...state.items];
+    items[index] = state.baseItems[index].scaledBy(multiplier);
     state = state.copyWith(items: items);
   }
 
   void removeItem(int index) {
     final items = [...state.items]..removeAt(index);
-    state = state.copyWith(items: items);
+    final baseItems = [...state.baseItems]..removeAt(index);
+    state = state.copyWith(items: items, baseItems: baseItems);
   }
 
   Future<bool> saveMeal() async {

@@ -5,6 +5,7 @@ class VisionItem {
   final double? carbs;
   final double? fat;
   final double? grams;
+  final String? portionRef;
   final double? confidence;
 
   const VisionItem({
@@ -14,6 +15,7 @@ class VisionItem {
     this.carbs,
     this.fat,
     this.grams,
+    this.portionRef,
     this.confidence,
   });
 
@@ -25,6 +27,7 @@ class VisionItem {
       carbs: (json['carbs'] as num?)?.toDouble(),
       fat: (json['fat'] as num?)?.toDouble(),
       grams: (json['grams'] as num?)?.toDouble(),
+      portionRef: json['portionRef'] as String?,
       confidence: (json['confidence'] as num?)?.toDouble(),
     );
   }

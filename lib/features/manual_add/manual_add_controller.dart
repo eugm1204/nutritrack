@@ -8,12 +8,14 @@ import '../dashboard/dashboard_controller.dart';
 class ManualAddState {
   final String mealName;
   final List<MealItem> items;
+  final List<MealItem> baseItems;
   final bool saving;
   final String? error;
 
   const ManualAddState({
     this.mealName = 'Refeição',
     this.items = const [],
+    this.baseItems = const [],
     this.saving = false,
     this.error,
   });
@@ -23,6 +25,7 @@ class ManualAddState {
   ManualAddState copyWith({
     String? mealName,
     List<MealItem>? items,
+    List<MealItem>? baseItems,
     bool? saving,
     String? error,
     bool clearError = false,
@@ -30,6 +33,7 @@ class ManualAddState {
     return ManualAddState(
       mealName: mealName ?? this.mealName,
       items: items ?? this.items,
+      baseItems: baseItems ?? this.baseItems,
       saving: saving ?? this.saving,
       error: clearError ? null : (error ?? this.error),
     );
@@ -45,19 +49,35 @@ class ManualAddController extends Notifier<ManualAddState> {
   }
 
   void addItem(MealItem item) {
-    state = state.copyWith(items: [...state.items, item], clearError: true);
+    state = state.copyWith(
+      items: [...state.items, item],
+      baseItems: [...state.baseItems, item],
+      clearError: true,
+    );
     ref.read(recentFoodsServiceProvider).save(item);
   }
 
   void updateItem(int index, String? name, int? calories) {
     final items = [...state.items];
-    items[index] = items[index].copyWith(name: name, calories: calories);
+    final updated = items[index].copyWith(name: name, calories: calories);
+    items[index] = updated;
+
+    final baseItems = [...state.baseItems];
+    baseItems[index] = updated;
+
+    state = state.copyWith(items: items, baseItems: baseItems);
+  }
+
+  void setPortion(int index, double multiplier) {
+    final items = [...state.items];
+    items[index] = state.baseItems[index].scaledBy(multiplier);
     state = state.copyWith(items: items);
   }
 
   void removeItem(int index) {
     final items = [...state.items]..removeAt(index);
-    state = state.copyWith(items: items);
+    final baseItems = [...state.baseItems]..removeAt(index);
+    state = state.copyWith(items: items, baseItems: baseItems);
   }
 
   Future<bool> save() async {

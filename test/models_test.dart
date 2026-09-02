@@ -14,6 +14,7 @@ void main() {
         carbs: 43.1,
         fat: 0.5,
         grams: 150,
+        portionRef: '1 chávena de arroz',
         confidence: 0.9,
       );
       final decoded = MealItem.fromJson(item.toJson());
@@ -23,6 +24,7 @@ void main() {
       expect(decoded.carbs, 43.1);
       expect(decoded.fat, 0.5);
       expect(decoded.grams, 150);
+      expect(decoded.portionRef, '1 chávena de arroz');
       expect(decoded.confidence, 0.9);
     });
 
@@ -39,6 +41,28 @@ void main() {
       expect(item.totalProtein, 0);
       expect(item.totalCarbs, 0);
       expect(item.totalFat, 0);
+    });
+
+    test('scaledBy scales all values proportionally', () {
+      const item = MealItem(
+        name: 'Arroz',
+        calories: 200,
+        protein: 4,
+        carbs: 43,
+        fat: 0.5,
+        grams: 150,
+      );
+      final half = item.scaledBy(0.5);
+      expect(half.calories, 100);
+      expect(half.protein, 2);
+      expect(half.carbs, 21.5);
+      expect(half.fat, 0.25);
+      expect(half.grams, 75);
+      expect(half.name, 'Arroz');
+
+      final double2 = item.scaledBy(2);
+      expect(double2.calories, 400);
+      expect(double2.grams, 300);
     });
   });
 
@@ -85,6 +109,7 @@ void main() {
             'carbs': 43.0,
             'fat': 0.5,
             'grams': 150,
+            'portionRef': '1 chávena de arroz',
             'confidence': 0.92,
           },
         ],
@@ -95,6 +120,7 @@ void main() {
       expect(analysis.totalProtein, 35.5);
       expect(analysis.items.single.grams, 150);
       expect(analysis.items.single.protein, 4.0);
+      expect(analysis.items.single.portionRef, '1 chávena de arroz');
     });
 
     test('falls back to summing items when totalCalories missing', () {

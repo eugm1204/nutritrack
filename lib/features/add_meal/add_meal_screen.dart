@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../widgets/portion_control.dart';
 import 'add_meal_controller.dart';
 import 'editable_item_tile.dart';
 
@@ -220,6 +221,13 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                           controller.updateItem(i, name, calories),
                       onRemove: () => controller.removeItem(i),
                     ),
+                    if (i < state.baseItems.length)
+                      PortionControl(
+                        item: state.items[i],
+                        base: state.baseItems[i],
+                        onPortionChanged: (mult) =>
+                            controller.setPortion(i, mult),
+                      ),
                     if (state.items[i].protein != null ||
                         state.items[i].carbs != null ||
                         state.items[i].fat != null)

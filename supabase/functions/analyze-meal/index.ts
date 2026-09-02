@@ -8,7 +8,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const MAX_ANALYSES_PER_HOUR = 15;
 
-const PROMPT = `Tu és um nutricionista especializado em estimar calorias e macros a partir de fotos de comida.
+const PROMPT = `Tu és um nutricionista especializado em estimar calorias, macros e porções a partir de fotos de comida.
 Analisa a foto da refeição e responde EXCLUSIVAMENTE com JSON válido (sem markdown, sem comentários), neste formato exato:
 {
   "mealName": "nome curto da refeição, ex: Almoço",
@@ -22,14 +22,15 @@ Analisa a foto da refeição e responde EXCLUSIVAMENTE com JSON válido (sem mar
       "carbs": <gramas de hidratos de carbono>,
       "fat": <gramas de gordura>,
       "grams": <peso estimado em gramas>,
+      "portionRef": "descrição visual da porção em português para o utilizador perceber a quantidade",
       "confidence": <0.0 a 1.0, confiança na estimativa>
     }
   ]
 }
-Regras:
-- Identifica cada alimento visível no prato.
-- Estima porções realistas por gramas (usa referências: 1 porção de arroz ~150g, 1 ovo ~50g, etc).
-- Estima macros (proteína, hidratos, gordura) com base nos alimentos e porções.
+REGRAS DE PORÇÕES (crítico):
+- Usa referências visuais comuns para estimar o peso: 1 colher de sopa ~15g, 1 colher de chá ~5g, 1 punhado ~30g, 1 mão cheia ~50-60g, 1 chávena de arroz cozido ~150g, 1 prato fundo de sopa ~250g, 1 fatia de pão ~30g, 1 ovo ~50g, 1 filete de frango ~120g, 1 bife ~150g, 1 batata média ~120g, 1 maçã ~150g, 1 banana ~120g.
+- Compara o alimento com a mão ou talheres na foto quando visíveis para calibrar o tamanho.
+- Escreve portionRef de forma simples e visual, ex: "1 chávena de arroz", "meio prato de massa", "2 colheres de sopa de feijão", "1 bife do tamanho da palma da mão".
 - Não inventes alimentos que não vês.
 - Se não houver comida na foto, retorna { "mealName": "Sem comida detectada", "totalCalories": 0, "totalProtein": 0, "items": [] }.
 - Valores de calorias devem ser números inteiros; macros podem ter 1 casa decimal.`;

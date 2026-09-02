@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
+import '../../widgets/portion_control.dart';
 import '../add_meal/editable_item_tile.dart';
 import '../dashboard/dashboard_controller.dart';
 
@@ -21,6 +22,7 @@ class MealDetailScreen extends ConsumerStatefulWidget {
 class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
   late final TextEditingController _nameController;
   late List<MealItem> _items;
+  late List<MealItem> _baseItems;
   bool _saving = false;
   bool _repeating = false;
   String? _error;
@@ -30,6 +32,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.meal.mealName);
     _items = [...widget.meal.items];
+    _baseItems = [...widget.meal.items];
   }
 
   @override
@@ -173,16 +176,33 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
               for (var i = 0; i < _items.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: EditableItemTile(
-                    item: _items[i],
-                    onChanged: (name, calories) => setState(() {
-                      _items[i] = _items[i].copyWith(
-                        name: name,
-                        calories: calories,
-                        confirmed: true,
-                      );
-                    }),
-                    onRemove: () => setState(() => _items.removeAt(i)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      EditableItemTile(
+                        item: _items[i],
+                        onChanged: (name, calories) => setState(() {
+                          _items[i] = _items[i].copyWith(
+                            name: name,
+                            calories: calories,
+                            confirmed: true,
+                          );
+                          _baseItems[i] = _items[i];
+                        }),
+                        onRemove: () => setState(() {
+                          _items.removeAt(i);
+                          _baseItems.removeAt(i);
+                        }),
+                      ),
+                      if (i < _baseItems.length)
+                        PortionControl(
+                          item: _items[i],
+                          base: _baseItems[i],
+                          onPortionChanged: (mult) => setState(() {
+                            _items[i] = _baseItems[i].scaledBy(mult);
+                          }),
+                        ),
+                    ],
                   ),
                 ),
               const SizedBox(height: 8),

@@ -5,6 +5,7 @@ class MealItem {
   final double? carbs;
   final double? fat;
   final double? grams;
+  final String? portionRef;
   final double? confidence;
   final bool confirmed;
 
@@ -15,6 +16,7 @@ class MealItem {
     this.carbs,
     this.fat,
     this.grams,
+    this.portionRef,
     this.confidence,
     this.confirmed = false,
   });
@@ -27,6 +29,7 @@ class MealItem {
       carbs: (json['carbs'] as num?)?.toDouble(),
       fat: (json['fat'] as num?)?.toDouble(),
       grams: (json['grams'] as num?)?.toDouble(),
+      portionRef: json['portionRef'] as String?,
       confidence: (json['confidence'] as num?)?.toDouble(),
       confirmed: json['confirmed'] as bool? ?? false,
     );
@@ -39,6 +42,7 @@ class MealItem {
         if (carbs != null) 'carbs': carbs,
         if (fat != null) 'fat': fat,
         if (grams != null) 'grams': grams,
+        if (portionRef != null) 'portionRef': portionRef,
         if (confidence != null) 'confidence': confidence,
         'confirmed': confirmed,
       };
@@ -50,6 +54,7 @@ class MealItem {
     double? carbs,
     double? fat,
     double? grams,
+    String? portionRef,
     double? confidence,
     bool? confirmed,
   }) {
@@ -60,6 +65,7 @@ class MealItem {
       carbs: carbs ?? this.carbs,
       fat: fat ?? this.fat,
       grams: grams ?? this.grams,
+      portionRef: portionRef ?? this.portionRef,
       confidence: confidence ?? this.confidence,
       confirmed: confirmed ?? this.confirmed,
     );
@@ -68,4 +74,18 @@ class MealItem {
   double get totalProtein => protein ?? 0;
   double get totalCarbs => carbs ?? 0;
   double get totalFat => fat ?? 0;
+
+  MealItem scaledBy(double multiplier) {
+    return MealItem(
+      name: name,
+      calories: (calories * multiplier).round(),
+      protein: protein != null ? protein! * multiplier : null,
+      carbs: carbs != null ? carbs! * multiplier : null,
+      fat: fat != null ? fat! * multiplier : null,
+      grams: grams != null ? grams! * multiplier : null,
+      portionRef: portionRef,
+      confidence: confidence,
+      confirmed: confirmed,
+    );
+  }
 }
