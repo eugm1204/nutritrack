@@ -52968,6 +52968,7 @@ r.J$=0
 s.ap()},
 gajq(){var s,r=this
 switch(r.w.a){case 0:return B.c.cg(r.x.a.a).length!==0
+case 1:return r.y!=null&&r.z!=null
 case 4:s=r.ch.a.a
 if(s.length!==0){s=A.jx(s,null)
 s=(s==null?0:s)>0}else s=!0
@@ -53091,12 +53092,11 @@ case 2:return"Qual \xe9 o teu objetivo? \ud83c\udfaf"
 case 3:return"O teu corpo \u2696\ufe0f"
 case 4:return"A tua meta di\xe1ria \ud83d\udd25"}},
 ayu(){switch(this.w.a){case 0:return"Vou usar o teu nome nas sauda\xe7\xf5es."
-case 1:return"Ajuda a calcular as tuas necessidades cal\xf3ricas."
+case 1:return"Necess\xe1rio para calcular as tuas necessidades cal\xf3ricas."
 case 2:return"Escolhe um \u2014 podes mudar depois nas defini\xe7\xf5es."
 case 3:return"Sem press\xe3o \u2014 podes adicionar tudo mais tarde."
 case 4:return"Calculada para ti, mas ajust\xe1vel."}},
-gay9(){switch(this.w.a){case 0:return!1
-case 4:return!1
+gay9(){switch(this.w.a){case 0:case 1:case 4:return!1
 default:return!0}},
 ayp(){var s,r,q,p,o,n,m,l,k,j=this,i=null,h=j.c
 h.toString
