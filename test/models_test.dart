@@ -6,11 +6,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('MealItem', () {
-    test('roundtrip json', () {
-      const item = MealItem(name: 'Arroz', calories: 200, grams: 150, confidence: 0.9);
+    test('roundtrip json with macros', () {
+      const item = MealItem(
+        name: 'Arroz',
+        calories: 200,
+        protein: 4.2,
+        carbs: 43.1,
+        fat: 0.5,
+        grams: 150,
+        confidence: 0.9,
+      );
       final decoded = MealItem.fromJson(item.toJson());
       expect(decoded.name, 'Arroz');
       expect(decoded.calories, 200);
+      expect(decoded.protein, 4.2);
+      expect(decoded.carbs, 43.1);
+      expect(decoded.fat, 0.5);
       expect(decoded.grams, 150);
       expect(decoded.confidence, 0.9);
     });
@@ -21,6 +32,13 @@ void main() {
       expect(updated.name, 'Arroz');
       expect(updated.calories, 180);
       expect(updated.confirmed, isFalse);
+    });
+
+    test('macros default to zero', () {
+      const item = MealItem(name: 'X', calories: 100);
+      expect(item.totalProtein, 0);
+      expect(item.totalCarbs, 0);
+      expect(item.totalFat, 0);
     });
   });
 
@@ -54,18 +72,29 @@ void main() {
   });
 
   group('VisionAnalysis', () {
-    test('parses analysis result', () {
+    test('parses analysis result with macros', () {
       final analysis = VisionAnalysis.fromJson({
         'mealName': 'Almoço',
         'totalCalories': 650,
+        'totalProtein': 35.5,
         'items': [
-          {'name': 'Arroz', 'calories': 200, 'grams': 150, 'confidence': 0.92},
+          {
+            'name': 'Arroz',
+            'calories': 200,
+            'protein': 4.0,
+            'carbs': 43.0,
+            'fat': 0.5,
+            'grams': 150,
+            'confidence': 0.92,
+          },
         ],
       });
 
       expect(analysis.mealName, 'Almoço');
       expect(analysis.totalCalories, 650);
+      expect(analysis.totalProtein, 35.5);
       expect(analysis.items.single.grams, 150);
+      expect(analysis.items.single.protein, 4.0);
     });
 
     test('falls back to summing items when totalCalories missing', () {

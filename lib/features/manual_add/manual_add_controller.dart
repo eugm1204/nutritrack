@@ -46,6 +46,7 @@ class ManualAddController extends Notifier<ManualAddState> {
 
   void addItem(MealItem item) {
     state = state.copyWith(items: [...state.items, item], clearError: true);
+    ref.read(recentFoodsServiceProvider).save(item);
   }
 
   void updateItem(int index, String? name, int? calories) {

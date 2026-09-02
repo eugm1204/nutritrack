@@ -162,11 +162,24 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
   Timer? _debounce;
   bool _searching = false;
   List<FoodProduct> _results = [];
+  List<MealItem> _recents = [];
   String? _error;
 
   final _manualNameController = TextEditingController();
   final _manualCaloriesController = TextEditingController();
   bool _showManual = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecents();
+  }
+
+  Future<void> _loadRecents() async {
+    final recents = await ref.read(recentFoodsServiceProvider).load();
+    if (!mounted) return;
+    setState(() => _recents = recents);
+  }
 
   @override
   void dispose() {
@@ -253,6 +266,41 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
               hintText: 'ex: arroz, frango, batata...',
             ),
           ),
+          if (_searchController.text.trim().isEmpty && _recents.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Recentes',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _recents.length,
+                itemBuilder: (context, index) {
+                  final item = _recents[index];
+                  return ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.history, size: 18),
+                    title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text('${item.calories} kcal'),
+                    trailing: const Icon(Icons.add_circle_outline),
+                    onTap: () {
+                      ref
+                          .read(manualAddControllerProvider.notifier)
+                          .addItem(item);
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
           if (_searching) ...[
             const SizedBox(height: 12),
             const Center(child: CircularProgressIndicator()),

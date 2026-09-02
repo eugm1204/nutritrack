@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../models/profile.dart';
 import '../../providers/providers.dart';
@@ -78,6 +80,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _exportCsv() async {
+    try {
+      final userId = ref.read(supabaseProvider).auth.currentUser!.id;
+      final meals = await ref.read(mealRepositoryProvider).fetchAllMeals(userId);
+
+      final buffer = StringBuffer();
+      buffer.writeln('data,refeicao,alimento,calorias,proteina,hidratos,gordura');
+      for (final meal in meals) {
+        final date = DateFormat('yyyy-MM-dd HH:mm').format(meal.consumedAt);
+        for (final item in meal.items) {
+          buffer.writeln(
+            '"$date","${meal.mealName}","${item.name}",${item.calories},'
+            '${item.protein ?? ''},${item.carbs ?? ''},${item.fat ?? ''}',
+          );
+        }
+        if (meal.items.isEmpty) {
+          buffer.writeln('"$date","${meal.mealName}","",${meal.totalCalories},,,');
+        }
+      }
+
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Exportar dados (CSV)'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${meals.length} refeições · '
+                    '${buffer.toString().split('\n').length - 1} linhas'),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(text: buffer.toString()),
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('CSV copiado para a área de transferência')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.copy),
+                  label: const Text('Copiar CSV'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      debugPrint('[exportCsv] Erro: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível exportar os dados.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -140,6 +211,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       )
                     : const Icon(Icons.save_outlined),
                 label: Text(_saving ? 'A guardar...' : 'Guardar'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _exportCsv,
+                icon: const Icon(Icons.file_download_outlined),
+                label: const Text('Exportar dados (CSV)'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
               ),
             ],
           );

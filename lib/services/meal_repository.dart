@@ -55,6 +55,39 @@ class MealRepository {
     return Meal.fromJson(row);
   }
 
+  Future<Meal> updateMeal({
+    required String mealId,
+    required String userId,
+    required String mealName,
+    required List<MealItem> items,
+  }) async {
+    final total = items.fold<int>(0, (sum, item) => sum + item.calories);
+
+    final row = await _client
+        .from('meals')
+        .update({
+          'meal_name': mealName,
+          'total_calories': total,
+          'items': items.map((e) => e.toJson()).toList(),
+        })
+        .eq('id', mealId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+    return Meal.fromJson(row);
+  }
+
+  Future<List<Meal>> fetchAllMeals(String userId) async {
+    final rows = await _client
+        .from('meals')
+        .select()
+        .eq('user_id', userId)
+        .order('consumed_at', ascending: true);
+
+    return rows.map(Meal.fromJson).toList();
+  }
+
   Future<List<Meal>> fetchMealsForDate(DateTime date, String userId) async {
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));

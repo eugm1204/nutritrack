@@ -85,6 +85,12 @@ class _PickView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.colorScheme.error),
             ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => context.push('/manual-add'),
+              icon: const Icon(Icons.edit_note),
+              label: const Text('Adicionar manualmente'),
+            ),
           ],
           const SizedBox(height: 32),
           FilledButton.icon(
@@ -205,11 +211,46 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
             for (var i = 0; i < state.items.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: EditableItemTile(
-                  item: state.items[i],
-                  onChanged: (name, calories) =>
-                      controller.updateItem(i, name, calories),
-                  onRemove: () => controller.removeItem(i),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    EditableItemTile(
+                      item: state.items[i],
+                      onChanged: (name, calories) =>
+                          controller.updateItem(i, name, calories),
+                      onRemove: () => controller.removeItem(i),
+                    ),
+                    if (state.items[i].protein != null ||
+                        state.items[i].carbs != null ||
+                        state.items[i].fat != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, top: 2),
+                        child: Row(
+                          children: [
+                            Text(
+                              'P ${(state.items[i].protein ?? 0).toStringAsFixed(0)}g · '
+                              'H ${(state.items[i].carbs ?? 0).toStringAsFixed(0)}g · '
+                              'G ${(state.items[i].fat ?? 0).toStringAsFixed(0)}g',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            if ((state.items[i].confidence ?? 1) < 0.6) ...[
+                              const SizedBox(width: 8),
+                              Icon(Icons.warning_amber_rounded,
+                                  size: 14, color: theme.colorScheme.tertiary),
+                              const SizedBox(width: 2),
+                              Text(
+                                'confirma',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.tertiary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
             const SizedBox(height: 8),

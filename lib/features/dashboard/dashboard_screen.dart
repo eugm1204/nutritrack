@@ -33,6 +33,11 @@ class DashboardScreen extends ConsumerWidget {
             onPressed: () => _pickDate(context, ref),
           ),
           IconButton(
+            icon: const Icon(Icons.monitor_weight_outlined),
+            tooltip: 'Peso',
+            onPressed: () => context.push('/weight'),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push('/settings'),
           ),
@@ -79,6 +84,7 @@ class DashboardScreen extends ConsumerWidget {
               else
                 ...state.meals.map((meal) => _MealCard(
                       meal: meal,
+                      onTap: () => context.push('/meal', extra: meal),
                       onDelete: () => ref.read(dashboardControllerProvider.notifier).deleteMeal(meal.id),
                     )),
             ],
@@ -318,9 +324,10 @@ class _WeeklyChart extends StatelessWidget {
 
 class _MealCard extends StatelessWidget {
   final dynamic meal;
+  final VoidCallback onTap;
   final VoidCallback onDelete;
 
-  const _MealCard({required this.meal, required this.onDelete});
+  const _MealCard({required this.meal, required this.onTap, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -350,6 +357,7 @@ class _MealCard extends StatelessWidget {
           '${meal.totalCalories} kcal',
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
+        onTap: onTap,
         onLongPress: () => _confirmDelete(context),
       ),
     );

@@ -103,6 +103,9 @@ class AddMealController extends Notifier<AddMealState> {
             .map((item) => MealItem(
                   name: item.name,
                   calories: item.calories,
+                  protein: item.protein,
+                  carbs: item.carbs,
+                  fat: item.fat,
                   grams: item.grams,
                   confidence: item.confidence,
                 ))
