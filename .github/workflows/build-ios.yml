@@ -1,0 +1,54 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Import signing certificate
+        if: env.APPLE_CERTIFICATE_P12 != ''
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" build.keychain
+
+      - name: Build unsigned IPA
+        if: env.APPLE_CERTIFICATE_P12 == ''
+        run: flutter build ipa --no-codesign
+
+      - name: Build signed IPA
+        if: env.APPLE_CERTIFICATE_P12 != ''
+        env:
+          APPLE_PROFILE: ${{ secrets.APPLE_PROFILE }}
+        run: |
+          echo "$APPLE_PROFILE" | base64 --decode > profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          flutter build ipa --export-method ad-hoc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nutritrack-ipa
+          path: build/ios/ipa/*.ipa

@@ -1,0 +1,312 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../models/meal_item.dart';
+import 'add_meal_controller.dart';
+
+class AddMealScreen extends ConsumerStatefulWidget {
+  const AddMealScreen({super.key});
+
+  @override
+  ConsumerState<AddMealScreen> createState() => _AddMealScreenState();
+}
+
+class _AddMealScreenState extends ConsumerState<AddMealScreen> {
+  final _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    final file = await _picker.pickImage(
+      source: source,
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+    ref.read(addMealControllerProvider.notifier).analyzeImage(file);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(addMealControllerProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Adicionar refeição')),
+      body: switch (state.step) {
+        AddMealStep.pick => _PickView(
+            onCamera: () => _pickImage(ImageSource.camera),
+            onGallery: () => _pickImage(ImageSource.gallery),
+            error: state.error,
+          ),
+        AddMealStep.analyzing => const _AnalyzingView(),
+        AddMealStep.confirm || AddMealStep.saving => _ConfirmView(
+            saving: state.step == AddMealStep.saving,
+          ),
+      },
+    );
+  }
+}
+
+class _PickView extends StatelessWidget {
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+  final String? error;
+
+  const _PickView({required this.onCamera, required this.onGallery, this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.restaurant, size: 64, color: theme.colorScheme.primary),
+          const SizedBox(height: 16),
+          Text(
+            'Tira uma foto ao teu prato\ne deixa a IA estimar as calorias.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          if (error != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: 32),
+          FilledButton.icon(
+            onPressed: onCamera,
+            icon: const Icon(Icons.photo_camera_outlined),
+            label: const Text('Tirar foto'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onGallery,
+            icon: const Icon(Icons.photo_library_outlined),
+            label: const Text('Escolher da galeria'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalyzingView extends StatelessWidget {
+  const _AnalyzingView();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 20),
+          Text(
+            'A analisar a foto com IA...',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Isto pode demorar alguns segundos',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfirmView extends ConsumerWidget {
+  final bool saving;
+
+  const _ConfirmView({required this.saving});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(addMealControllerProvider);
+    final theme = Theme.of(context);
+    final controller = ref.read(addMealControllerProvider.notifier);
+
+    return Stack(
+      children: [
+        ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.memory(
+                state.previewBytes!,
+                height: 220,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  height: 220,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: const Icon(Icons.image_outlined, size: 48),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: TextEditingController(text: state.mealName),
+              onChanged: controller.updateMealName,
+              decoration: const InputDecoration(
+                labelText: 'Nome da refeição',
+                prefixIcon: Icon(Icons.label_outline),
+              ),
+            ),
+            const SizedBox(height: 16),
+            for (var i = 0; i < state.items.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _EditableItemTile(
+                  item: state.items[i],
+                  onChanged: (name, calories) =>
+                      controller.updateItem(i, name, calories),
+                  onRemove: () => controller.removeItem(i),
+                ),
+              ),
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                title: Text(
+                  'Total',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                trailing: Text(
+                  '${state.totalCalories} kcal',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            if (state.error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                state.error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+          ],
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          child: FilledButton.icon(
+            onPressed: saving
+                ? null
+                : () async {
+                    final ok = await controller.saveMeal();
+                    if (ok && context.mounted) {
+                      controller.reset();
+                      Navigator.of(context).pop();
+                    }
+                  },
+            icon: saving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check),
+            label: Text(saving ? 'A guardar...' : 'Guardar refeição'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditableItemTile extends StatefulWidget {
+  final MealItem item;
+  final void Function(String name, int calories) onChanged;
+  final VoidCallback onRemove;
+
+  const _EditableItemTile({
+    required this.item,
+    required this.onChanged,
+    required this.onRemove,
+  });
+
+  @override
+  State<_EditableItemTile> createState() => _EditableItemTileState();
+}
+
+class _EditableItemTileState extends State<_EditableItemTile> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _caloriesController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.item.name);
+    _caloriesController = TextEditingController(text: '${widget.item.calories}');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _caloriesController.dispose();
+    super.dispose();
+  }
+
+  void _emit() {
+    widget.onChanged(
+      _nameController.text.trim(),
+      int.tryParse(_caloriesController.text) ?? 0,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _nameController,
+                onChanged: (_) => _emit(),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  labelText: 'Alimento',
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 110,
+              child: TextField(
+                controller: _caloriesController,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => _emit(),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  labelText: 'kcal',
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: widget.onRemove,
+              icon: const Icon(Icons.delete_outline),
+              color: theme.colorScheme.error,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
