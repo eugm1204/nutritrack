@@ -70,6 +70,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.invalidate(dashboardControllerProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
+      debugPrint('[settings/save] Erro: $e');
       setState(() {
         _error = 'Não foi possível guardar. Tenta novamente.';
         _saving = false;

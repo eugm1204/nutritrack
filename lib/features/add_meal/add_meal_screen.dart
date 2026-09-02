@@ -126,13 +126,34 @@ class _AnalyzingView extends StatelessWidget {
   }
 }
 
-class _ConfirmView extends ConsumerWidget {
+class _ConfirmView extends ConsumerStatefulWidget {
   final bool saving;
 
   const _ConfirmView({required this.saving});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ConfirmView> createState() => _ConfirmViewState();
+}
+
+class _ConfirmViewState extends ConsumerState<_ConfirmView> {
+  late final TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: ref.read(addMealControllerProvider).mealName,
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(addMealControllerProvider);
     final theme = Theme.of(context);
     final controller = ref.read(addMealControllerProvider.notifier);
@@ -157,7 +178,7 @@ class _ConfirmView extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: TextEditingController(text: state.mealName),
+              controller: _nameController,
               onChanged: controller.updateMealName,
               decoration: const InputDecoration(
                 labelText: 'Nome da refeição',
@@ -203,7 +224,7 @@ class _ConfirmView extends ConsumerWidget {
           right: 16,
           bottom: 16,
           child: FilledButton.icon(
-            onPressed: saving
+            onPressed: widget.saving
                 ? null
                 : () async {
                     final ok = await controller.saveMeal();
@@ -212,14 +233,14 @@ class _ConfirmView extends ConsumerWidget {
                       Navigator.of(context).pop();
                     }
                   },
-            icon: saving
+            icon: widget.saving
                 ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.check),
-            label: Text(saving ? 'A guardar...' : 'Guardar refeição'),
+            label: Text(widget.saving ? 'A guardar...' : 'Guardar refeição'),
           ),
         ),
       ],

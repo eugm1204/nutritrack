@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:cross_file/cross_file.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/meal_item.dart';
@@ -83,6 +82,7 @@ class AddMealController extends Notifier<AddMealState> {
             .toList(),
       );
     } catch (e) {
+      debugPrint('[analyzeImage] Erro: $e');
       state = state.copyWith(
         step: AddMealStep.pick,
         error: 'Não foi possível analisar a imagem. Tenta novamente.',
@@ -123,6 +123,7 @@ class AddMealController extends Notifier<AddMealState> {
       ref.invalidate(dashboardControllerProvider);
       return true;
     } catch (e) {
+      debugPrint('[saveMeal] Erro: $e');
       state = state.copyWith(
         step: AddMealStep.confirm,
         error: 'Não foi possível guardar a refeição. Tenta novamente.',

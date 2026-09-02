@@ -30,10 +30,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         : await auth.login(_emailController.text, _passwordController.text);
 
     if (!ok && mounted) {
-      final error = ref.read(authControllerProvider).error;
+      final authState = ref.read(authControllerProvider);
+      final error = authState.error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Erro ao entrar.')),
+        SnackBar(
+          content: Text(error ?? 'Erro ao entrar.'),
+          duration: const Duration(seconds: 5),
+        ),
       );
+      if (authState.signupPendingEmail) {
+        setState(() => _isSignUp = false);
+      }
     }
   }
 
