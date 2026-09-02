@@ -13,6 +13,7 @@ import '../../widgets/celebration_dialog.dart';
 import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
+import '../../widgets/suggestion_sheet.dart';
 import '../auth/auth_controller.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'dashboard_controller.dart';
@@ -51,7 +52,12 @@ class DashboardScreen extends ConsumerWidget {
                 offset: const Offset(0, -30),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _HeroCard(state: state),
+                  child: _HeroCard(
+                    state: state,
+                    onSuggest: state.remainingCalories >= 200
+                        ? () => _openSuggestions(context, ref, state)
+                        : null,
+                  ),
                 ),
               ),
               Padding(
@@ -250,8 +256,9 @@ class _GradientHeader extends StatelessWidget {
 
 class _HeroCard extends StatelessWidget {
   final DashboardState state;
+  final VoidCallback? onSuggest;
 
-  const _HeroCard({required this.state});
+  const _HeroCard({required this.state, this.onSuggest});
 
   @override
   Widget build(BuildContext context) {
@@ -324,6 +331,17 @@ class _HeroCard extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (onSuggest != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: onSuggest,
+                icon: const Icon(Icons.lightbulb_outline),
+                label: const Text('O que comer? 💡'),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -864,6 +882,32 @@ class _ErrorView extends StatelessWidget {
       ),
     );
   }
+}
+
+void _openSuggestions(
+  BuildContext context,
+  WidgetRef ref,
+  DashboardState state,
+) {
+  double sum(double? Function(dynamic item) extract) => state.meals.fold<double>(
+      0,
+      (acc, meal) =>
+          acc + meal.items.fold<double>(0, (a, item) => a + (extract(item) ?? 0)));
+
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => SuggestionSheet(
+      remainingKcal: state.remainingCalories,
+      objective: state.objective,
+      protein: sum((item) => item.protein),
+      carbs: sum((item) => item.carbs),
+      fat: sum((item) => item.fat),
+      proteinGoal: state.proteinGoalG,
+      carbsGoal: state.carbsGoalG,
+      fatGoal: state.fatGoalG,
+    ),
+  );
 }
 
 class _CelebrationGate extends StatefulWidget {

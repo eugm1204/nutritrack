@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../widgets/animated_list_item.dart';
+import '../../widgets/coach_sheet.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
 import 'history_controller.dart';
@@ -46,7 +47,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
                 if (state.insights.hasData) ...[
-                  _InsightsCard(insights: state.insights),
+                  _InsightsCard(
+                    insights: state.insights,
+                    onCoach: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => CoachSheet(historyState: state),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                 ],
                 for (var i = 0; i < days.length; i++) ...[
@@ -78,8 +86,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
 class _InsightsCard extends StatelessWidget {
   final WeeklyInsights insights;
+  final VoidCallback onCoach;
 
-  const _InsightsCard({required this.insights});
+  const _InsightsCard({required this.insights, required this.onCoach});
 
   @override
   Widget build(BuildContext context) {
@@ -178,6 +187,15 @@ class _InsightsCard extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              onPressed: onCoach,
+              icon: const Icon(Icons.psychology_outlined),
+              label: const Text('Resumo do coach 🧠'),
+            ),
+          ),
         ],
       ),
     );

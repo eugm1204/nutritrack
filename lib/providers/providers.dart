@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
+import '../services/ai_coach_service.dart';
 import '../services/favorites_service.dart';
 import '../services/food_search_service.dart';
 import '../services/meal_repository.dart';
@@ -14,6 +15,10 @@ final supabaseProvider = Provider<SupabaseClient>((ref) => Supabase.instance.cli
 
 final visionServiceProvider = Provider<VisionService>(
   (ref) => VisionService(ref.watch(supabaseProvider)),
+);
+
+final aiCoachServiceProvider = Provider<AiCoachService>(
+  (ref) => AiCoachService(ref.watch(supabaseProvider)),
 );
 
 final mealRepositoryProvider = Provider<MealRepository>(
