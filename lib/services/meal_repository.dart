@@ -18,7 +18,7 @@ class MealRepository {
     final ext = p.extension(file.name).isEmpty ? '.jpg' : p.extension(file.name);
     final path = '$userId/${DateTime.now().millisecondsSinceEpoch}_${_uuid.v4()}$ext';
 
-    await _client.storage.from(_bucket).upload(
+    await _client.storage.from(_bucket).uploadBinary(
           path,
           bytes,
           fileOptions: FileOptions(
