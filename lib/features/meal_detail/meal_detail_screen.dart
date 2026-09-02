@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
+import '../../services/favorites_service.dart';
 import '../../widgets/portion_control.dart';
 import '../add_meal/editable_item_tile.dart';
 import '../dashboard/dashboard_controller.dart';
@@ -25,6 +26,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
   late List<MealItem> _baseItems;
   bool _saving = false;
   bool _repeating = false;
+  bool _isFavorite = false;
   String? _error;
 
   @override
@@ -33,6 +35,35 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
     _nameController = TextEditingController(text: widget.meal.mealName);
     _items = [...widget.meal.items];
     _baseItems = [...widget.meal.items];
+    _loadFavoriteStatus();
+  }
+
+  Future<void> _loadFavoriteStatus() async {
+    final isFav = await ref.read(favoritesServiceProvider).isFavorite(widget.meal.mealName);
+    if (mounted) setState(() => _isFavorite = isFav);
+  }
+
+  Future<void> _toggleFavorite() async {
+    final favorites = await ref.read(favoritesServiceProvider).toggle(FavoriteMeal(
+          name: _nameController.text.trim().isEmpty
+              ? widget.meal.mealName
+              : _nameController.text.trim(),
+          imageUrl: widget.meal.imageUrl,
+          items: _items,
+        ));
+    final isFav = favorites.any((f) =>
+        f.name == (_nameController.text.trim().isEmpty
+            ? widget.meal.mealName
+            : _nameController.text.trim()));
+    setState(() => _isFavorite = isFav);
+    ref.read(dashboardControllerProvider.notifier).refreshFavorites();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isFav ? 'Adicionada às favoritas ⭐' : 'Removida das favoritas'),
+        ),
+      );
+    }
   }
 
   @override
@@ -133,7 +164,19 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhes da refeição')),
+      appBar: AppBar(
+        title: const Text('Detalhes da refeição'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.star : Icons.star_border,
+              color: _isFavorite ? macroCarbsColor : null,
+            ),
+            tooltip: _isFavorite ? 'Remover das favoritas' : 'Adicionar às favoritas',
+            onPressed: _toggleFavorite,
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           ListView(

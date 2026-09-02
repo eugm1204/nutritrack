@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
+import '../services/favorites_service.dart';
 import '../services/food_search_service.dart';
 import '../services/meal_repository.dart';
 import '../services/profile_repository.dart';
@@ -33,6 +34,10 @@ final foodSearchServiceProvider = Provider<FoodSearchService>(
 
 final recentFoodsServiceProvider = Provider<RecentFoodsService>(
   (ref) => RecentFoodsService(),
+);
+
+final favoritesServiceProvider = Provider<FavoritesService>(
+  (ref) => FavoritesService(),
 );
 
 final profileProvider = FutureProvider<Profile>((ref) async {

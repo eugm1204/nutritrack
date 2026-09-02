@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme.dart';
+import '../../providers/providers.dart';
+import '../../services/favorites_service.dart';
 import '../../widgets/animated_list_item.dart';
+import '../../widgets/celebration_dialog.dart';
 import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
@@ -27,13 +31,18 @@ class DashboardScreen extends ConsumerWidget {
         error: (error, _) => _ErrorView(message: '$error'),
         data: (state) {
           if (!state.onboardingCompleted) return const OnboardingScreen();
-          return RefreshIndicator(
+          return _CelebrationGate(
+            consumedCalories: state.consumedCalories,
+            goalCalories: state.goalCalories,
+            hasMeals: state.meals.isNotEmpty,
+            child: RefreshIndicator(
           onRefresh: () => ref.refresh(dashboardControllerProvider.future),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               _GradientHeader(
                 name: state.name,
+                streakDays: state.streakDays,
                 onSettings: () => context.push('/settings'),
                 onLogout: () =>
                     ref.read(authControllerProvider.notifier).signOut(),
@@ -51,6 +60,24 @@ class DashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 8),
+                    _WaterCard(
+                      cups: state.waterCups,
+                      onAdd: () =>
+                          ref.read(dashboardControllerProvider.notifier).addWater(),
+                      onRemove: () => ref
+                          .read(dashboardControllerProvider.notifier)
+                          .removeWater(),
+                    ),
+                    const SizedBox(height: 16),
+                    if (state.favorites.isNotEmpty) ...[
+                      _FavoritesSection(
+                        favorites: state.favorites,
+                        onRepeated: () => ref
+                            .read(dashboardControllerProvider.notifier)
+                            .refreshFavorites(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     _WeeklyChart(state: state),
                     const SizedBox(height: 20),
                     Text(
@@ -90,7 +117,8 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ],
           ),
-          );
+        ),
+        );
         },
       ),
     );
@@ -107,11 +135,13 @@ class DashboardScreen extends ConsumerWidget {
 
 class _GradientHeader extends StatelessWidget {
   final String? name;
+  final int streakDays;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
 
   const _GradientHeader({
     this.name,
+    this.streakDays = 0,
     required this.onSettings,
     required this.onLogout,
   });
@@ -169,6 +199,34 @@ class _GradientHeader extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (streakDays > 0) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🔥', style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 6),
+                            Text(
+                              '$streakDays ${streakDays == 1 ? 'dia' : 'dias'} seguidos',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -803,6 +861,293 @@ class _ErrorView extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CelebrationGate extends StatefulWidget {
+  final int consumedCalories;
+  final int goalCalories;
+  final bool hasMeals;
+  final Widget child;
+
+  const _CelebrationGate({
+    required this.consumedCalories,
+    required this.goalCalories,
+    required this.hasMeals,
+    required this.child,
+  });
+
+  @override
+  State<_CelebrationGate> createState() => _CelebrationGateState();
+}
+
+class _CelebrationGateState extends State<_CelebrationGate> {
+  bool _celebratedToday = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCelebration();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CelebrationGate oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _checkCelebration();
+  }
+
+  Future<void> _checkCelebration() async {
+    if (_celebratedToday) return;
+    if (!widget.hasMeals) return;
+    final goal = widget.goalCalories;
+    final consumed = widget.consumedCalories;
+    if (goal <= 0) return;
+
+    final ratio = consumed / goal;
+    if (ratio < 0.7 || ratio > 1.0) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final todayKey = '${now.year}-${now.month}-${now.day}';
+    if (prefs.getString('last_celebration') == todayKey) {
+      _celebratedToday = true;
+      return;
+    }
+
+    await prefs.setString('last_celebration', todayKey);
+    _celebratedToday = true;
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => CelebrationDialog(
+        consumedCalories: consumed,
+        goalCalories: goal,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+class _WaterCard extends StatelessWidget {
+  final int cups;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  const _WaterCard({
+    required this.cups,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  static const _goal = 8;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return PressableCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          const Text('💧', style: TextStyle(fontSize: 26)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Água',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: (cups / _goal).clamp(0.0, 1.0),
+                    minHeight: 8,
+                    color: const Color(0xFF2196F3),
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$cups/$_goal copos · ${cups * 250} ml',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _WaterButton(
+            icon: Icons.remove,
+            enabled: cups > 0,
+            onTap: onRemove,
+          ),
+          const SizedBox(width: 8),
+          _WaterButton(
+            icon: Icons.add,
+            enabled: cups < 20,
+            onTap: onAdd,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WaterButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _WaterButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: const Color(0xFF2196F3).withValues(alpha: 0.12),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: enabled ? onTap : null,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(
+            icon,
+            size: 20,
+            color: enabled
+                ? const Color(0xFF2196F3)
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoritesSection extends ConsumerWidget {
+  final List<FavoriteMeal> favorites;
+  final VoidCallback onRepeated;
+
+  const _FavoritesSection({
+    required this.favorites,
+    required this.onRepeated,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    Future<void> repeat(FavoriteMeal favorite) async {
+      try {
+        final user = ref.read(supabaseProvider).auth.currentUser;
+        if (user == null) return;
+        await ref.read(mealRepositoryProvider).insertMeal(
+              userId: user.id,
+              imageUrl: favorite.imageUrl,
+              mealName: favorite.name,
+              items: favorite.items,
+              consumedAt: DateTime.now(),
+            );
+        ref.invalidate(dashboardControllerProvider);
+        onRepeated();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${favorite.name} registada! ⭐')),
+          );
+        }
+      } catch (e) {
+        debugPrint('[favorites/repeat] Erro: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Não foi possível repetir a refeição.')),
+          );
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Favoritas ⭐',
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final favorite in favorites) ...[
+                _FavoriteChip(
+                  favorite: favorite,
+                  onTap: () => repeat(favorite),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FavoriteChip extends StatelessWidget {
+  final FavoriteMeal favorite;
+  final VoidCallback onTap;
+
+  const _FavoriteChip({required this.favorite, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = favorite.items.fold<int>(0, (sum, item) => sum + item.calories);
+    return PressableCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('⭐', style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                favorite.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                '$total kcal · ${favorite.items.length} item(s)',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 6),
+          Icon(Icons.play_circle_outline,
+              size: 18, color: theme.colorScheme.primary),
+        ],
       ),
     );
   }
