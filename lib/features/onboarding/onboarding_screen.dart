@@ -59,6 +59,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     switch (_step) {
       case OnboardingStep.name:
         return _nameController.text.trim().isNotEmpty;
+      case OnboardingStep.birth:
+        return _birthDate != null && _sex != null;
       case OnboardingStep.goal:
         return (_goalController.text.isEmpty ||
                 (int.tryParse(_goalController.text) ?? 0) > 0) &&
@@ -292,7 +294,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case OnboardingStep.name:
         return 'Vou usar o teu nome nas saudações.';
       case OnboardingStep.birth:
-        return 'Ajuda a calcular as tuas necessidades calóricas.';
+        return 'Necessário para calcular as tuas necessidades calóricas.';
       case OnboardingStep.objective:
         return 'Escolhe um — podes mudar depois nas definições.';
       case OnboardingStep.body:
@@ -305,7 +307,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool get _skippable {
     switch (_step) {
       case OnboardingStep.name:
-        return false;
+      case OnboardingStep.birth:
       case OnboardingStep.goal:
         return false;
       default:
