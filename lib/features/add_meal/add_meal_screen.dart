@@ -16,13 +16,22 @@ class _AddMealScreenState extends ConsumerState<AddMealScreen> {
   final _picker = ImagePicker();
 
   Future<void> _pickImage(ImageSource source) async {
-    final file = await _picker.pickImage(
-      source: source,
-      maxWidth: 1600,
-      imageQuality: 85,
-    );
-    if (file == null) return;
-    ref.read(addMealControllerProvider.notifier).analyzeImage(file);
+    try {
+      final file = await _picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        imageQuality: 85,
+      );
+      if (file == null) return;
+      ref.read(addMealControllerProvider.notifier).analyzeImage(file);
+    } catch (e) {
+      debugPrint('[pickImage] Erro: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao abrir câmara/galeria: $e')),
+        );
+      }
+    }
   }
 
   @override

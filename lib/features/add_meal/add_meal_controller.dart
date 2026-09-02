@@ -56,17 +56,44 @@ class AddMealController extends Notifier<AddMealState> {
   AddMealState build() => const AddMealState();
 
   Future<void> analyzeImage(XFile file) async {
+    Uint8List? bytes;
+    try {
+      debugPrint('[analyzeImage] A ler bytes do ficheiro: ${file.name}, path=${file.path}');
+      bytes = await file.readAsBytes();
+      debugPrint('[analyzeImage] Bytes lidos: ${bytes.length}');
+    } catch (e) {
+      debugPrint('[analyzeImage] Erro ao ler ficheiro: $e');
+      state = state.copyWith(
+        step: AddMealStep.pick,
+        error: 'Erro ao ler a imagem: $e',
+      );
+      return;
+    }
+
     state = state.copyWith(
       step: AddMealStep.analyzing,
       imagePath: file.path,
-      previewBytes: await file.readAsBytes(),
+      previewBytes: bytes,
       clearError: true,
     );
 
     try {
-      final userId = ref.read(supabaseProvider).auth.currentUser!.id;
-      final imageUrl = await ref.read(mealRepositoryProvider).uploadMealPhoto(file, userId);
+      final user = ref.read(supabaseProvider).auth.currentUser;
+      if (user == null) {
+        state = state.copyWith(
+          step: AddMealStep.pick,
+          error: 'Sessão expirada. Fecha e volta a entrar.',
+        );
+        return;
+      }
+
+      debugPrint('[analyzeImage] A fazer upload para o storage...');
+      final imageUrl = await ref.read(mealRepositoryProvider).uploadMealPhoto(file, user.id);
+      debugPrint('[analyzeImage] Upload concluído: $imageUrl');
+
+      debugPrint('[analyzeImage] A chamar edge function...');
       final analysis = await ref.read(visionServiceProvider).analyzeMeal(imageUrl);
+      debugPrint('[analyzeImage] Análise OK: ${analysis.items.length} itens');
 
       state = state.copyWith(
         step: AddMealStep.confirm,
@@ -82,10 +109,10 @@ class AddMealController extends Notifier<AddMealState> {
             .toList(),
       );
     } catch (e) {
-      debugPrint('[analyzeImage] Erro: $e');
+      debugPrint('[analyzeImage] Erro no fluxo: $e');
       state = state.copyWith(
         step: AddMealStep.pick,
-        error: 'Não foi possível analisar a imagem. Tenta novamente.',
+        error: 'Falha na análise: $e',
       );
     }
   }
