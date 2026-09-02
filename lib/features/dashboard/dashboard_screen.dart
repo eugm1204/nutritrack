@@ -116,6 +116,15 @@ class _GradientHeader extends StatelessWidget {
     required this.onLogout,
   });
 
+  static String _greetingWithName(String greeting, String? name) {
+    final trimmed = name?.trim() ?? '';
+    if (trimmed.isEmpty) return greeting;
+    final firstName = trimmed.split(RegExp(r'\s+')).first;
+    final display =
+        firstName.length > 14 ? '${firstName.substring(0, 12)}…' : firstName;
+    return '$greeting, $display';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -142,9 +151,9 @@ class _GradientHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name != null && name!.trim().isNotEmpty
-                          ? '$greeting, ${name!.trim()}'
-                          : greeting,
+                      _greetingWithName(greeting, name),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -216,7 +225,10 @@ class _HeroCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _MacroChips(state: state),
+                    if (state.hasMacroGoals)
+                      _MacroGoals(state: state)
+                    else
+                      _MacroChips(state: state),
                   ],
                 ),
               ),
@@ -357,6 +369,108 @@ class _Motivation extends StatelessWidget {
           color: theme.colorScheme.primary,
         ),
       ),
+    );
+  }
+}
+
+class _MacroGoals extends StatelessWidget {
+  final DashboardState state;
+
+  const _MacroGoals({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    double sum(double? Function(dynamic item) extract) => state.meals.fold<double>(
+        0,
+        (acc, meal) =>
+            acc + meal.items.fold<double>(0, (a, item) => a + (extract(item) ?? 0)));
+
+    return Column(
+      children: [
+        _MacroBar(
+          label: 'Proteína',
+          current: sum((item) => item.protein),
+          goal: state.proteinGoalG,
+          color: macroProteinColor,
+        ),
+        const SizedBox(height: 6),
+        _MacroBar(
+          label: 'Hidratos',
+          current: sum((item) => item.carbs),
+          goal: state.carbsGoalG,
+          color: macroCarbsColor,
+        ),
+        const SizedBox(height: 6),
+        _MacroBar(
+          label: 'Gordura',
+          current: sum((item) => item.fat),
+          goal: state.fatGoalG,
+          color: macroFatColor,
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroBar extends StatelessWidget {
+  final String label;
+  final double current;
+  final int? goal;
+  final Color color;
+
+  const _MacroBar({
+    required this.label,
+    required this.current,
+    required this.goal,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final target = goal;
+    final progress = target == null || target <= 0
+        ? 0.0
+        : (current / target).clamp(0.0, 1.0);
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 72,
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              color: color,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 78,
+          child: Text(
+            target != null
+                ? '${current.toStringAsFixed(0)}/${target}g'
+                : '${current.toStringAsFixed(0)}g',
+            textAlign: TextAlign.right,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

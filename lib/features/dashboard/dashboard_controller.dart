@@ -12,6 +12,9 @@ class DashboardState {
   final String? name;
   final double? targetWeightKg;
   final double? latestWeightKg;
+  final int? proteinGoalG;
+  final int? carbsGoalG;
+  final int? fatGoalG;
 
   const DashboardState({
     required this.date,
@@ -22,7 +25,13 @@ class DashboardState {
     this.name,
     this.targetWeightKg,
     this.latestWeightKg,
+    this.proteinGoalG,
+    this.carbsGoalG,
+    this.fatGoalG,
   });
+
+  bool get hasMacroGoals =>
+      proteinGoalG != null || carbsGoalG != null || fatGoalG != null;
 
   int get consumedCalories =>
       meals.fold(0, (sum, meal) => sum + meal.totalCalories);
@@ -76,6 +85,9 @@ class DashboardController extends AsyncNotifier<DashboardState> {
       name: profile.name,
       targetWeightKg: profile.targetWeightKg,
       latestWeightKg: latestWeight,
+      proteinGoalG: profile.proteinGoalG,
+      carbsGoalG: profile.carbsGoalG,
+      fatGoalG: profile.fatGoalG,
     );
   }
 

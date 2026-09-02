@@ -9,6 +9,9 @@ class Profile {
   final double? heightCm;
   final String? activityLevel;
   final double? targetWeightKg;
+  final int? proteinGoalG;
+  final int? carbsGoalG;
+  final int? fatGoalG;
   final bool onboardingCompleted;
 
   const Profile({
@@ -22,6 +25,9 @@ class Profile {
     this.heightCm,
     this.activityLevel,
     this.targetWeightKg,
+    this.proteinGoalG,
+    this.carbsGoalG,
+    this.fatGoalG,
     this.onboardingCompleted = false,
   });
 
@@ -39,6 +45,9 @@ class Profile {
       heightCm: (json['height_cm'] as num?)?.toDouble(),
       activityLevel: json['activity_level'] as String?,
       targetWeightKg: (json['target_weight_kg'] as num?)?.toDouble(),
+      proteinGoalG: (json['protein_goal_g'] as num?)?.toInt(),
+      carbsGoalG: (json['carbs_goal_g'] as num?)?.toInt(),
+      fatGoalG: (json['fat_goal_g'] as num?)?.toInt(),
       onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
     );
   }
@@ -55,6 +64,9 @@ class Profile {
         if (heightCm != null) 'height_cm': heightCm,
         if (activityLevel != null) 'activity_level': activityLevel,
         if (targetWeightKg != null) 'target_weight_kg': targetWeightKg,
+        if (proteinGoalG != null) 'protein_goal_g': proteinGoalG,
+        if (carbsGoalG != null) 'carbs_goal_g': carbsGoalG,
+        if (fatGoalG != null) 'fat_goal_g': fatGoalG,
         'onboarding_completed': onboardingCompleted,
       };
 
@@ -68,6 +80,9 @@ class Profile {
     double? heightCm,
     String? activityLevel,
     double? targetWeightKg,
+    int? proteinGoalG,
+    int? carbsGoalG,
+    int? fatGoalG,
     bool? onboardingCompleted,
   }) {
     return Profile(
@@ -81,6 +96,9 @@ class Profile {
       heightCm: heightCm ?? this.heightCm,
       activityLevel: activityLevel ?? this.activityLevel,
       targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      proteinGoalG: proteinGoalG ?? this.proteinGoalG,
+      carbsGoalG: carbsGoalG ?? this.carbsGoalG,
+      fatGoalG: fatGoalG ?? this.fatGoalG,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

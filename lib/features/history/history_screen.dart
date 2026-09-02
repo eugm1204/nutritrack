@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../widgets/animated_list_item.dart';
 import '../../widgets/meal_card.dart';
@@ -44,6 +45,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
+                if (state.insights.hasData) ...[
+                  _InsightsCard(insights: state.insights),
+                  const SizedBox(height: 16),
+                ],
                 for (var i = 0; i < days.length; i++) ...[
                   AnimatedListItem(
                     index: i,
@@ -66,6 +71,183 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _InsightsCard extends StatelessWidget {
+  final WeeklyInsights insights;
+
+  const _InsightsCard({required this.insights});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final change = insights.changePercent;
+    final hasPrevious = insights.previousWeekKcal != null;
+
+    return PressableCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Insights da semana 📈',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _InsightTile(
+                  icon: Icons.local_fire_department_outlined,
+                  iconColor: theme.colorScheme.primary,
+                  label: 'Média/dia',
+                  value: '${insights.avgKcalPerDay} kcal',
+                ),
+              ),
+              Expanded(
+                child: _InsightTile(
+                  icon: Icons.calendar_view_day_outlined,
+                  iconColor: macroCarbsColor,
+                  label: 'Dias registados',
+                  value: '${insights.daysLogged}/7',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _InsightTile(
+                  icon: Icons.thumb_up_alt_outlined,
+                  iconColor: macroProteinColor,
+                  label: 'Melhor dia',
+                  value: insights.bestDay != null
+                      ? '${_dayShort(insights.bestDay!)} · ${insights.bestDayKcal} kcal'
+                      : '—',
+                ),
+              ),
+              Expanded(
+                child: _InsightTile(
+                  icon: Icons.thumb_down_alt_outlined,
+                  iconColor: theme.colorScheme.error,
+                  label: 'Pior dia',
+                  value: insights.worstDay != null
+                      ? '${_dayShort(insights.worstDay!)} · ${insights.worstDayKcal} kcal'
+                      : '—',
+                ),
+              ),
+            ],
+          ),
+          if (hasPrevious) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  change != null && change <= 0
+                      ? Icons.trending_down
+                      : Icons.trending_up,
+                  size: 18,
+                  color: change != null && change <= 0
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    change == null
+                        ? 'Sem dados da semana anterior'
+                        : '${change.abs()}% ${change <= 0 ? 'menos' : 'mais'} calorias que a semana anterior',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: change != null && change <= 0
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _dayShort(DateTime day) {
+    final now = DateTime.now();
+    if (day.year == now.year && day.month == now.month && day.day == now.day) {
+      return 'Hoje';
+    }
+    if (now.subtract(const Duration(days: 1)).day == day.day &&
+        now.month == day.month &&
+        now.year == day.year) {
+      return 'Ontem';
+    }
+    return DateFormat('EEEE').format(day).substring(0, 3);
+  }
+}
+
+class _InsightTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+
+  const _InsightTile({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: iconColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

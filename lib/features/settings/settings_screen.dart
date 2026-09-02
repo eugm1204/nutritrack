@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme.dart';
 import '../../models/profile.dart';
 import '../../providers/providers.dart';
 import '../dashboard/dashboard_controller.dart';
@@ -20,6 +21,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _heightController;
   late final TextEditingController _targetWeightController;
+  late final TextEditingController _proteinGoalController;
+  late final TextEditingController _carbsGoalController;
+  late final TextEditingController _fatGoalController;
   DateTime? _birthDate;
   String? _sex;
   String _objective = 'maintain';
@@ -36,6 +40,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _nameController = TextEditingController();
     _heightController = TextEditingController();
     _targetWeightController = TextEditingController();
+    _proteinGoalController = TextEditingController();
+    _carbsGoalController = TextEditingController();
+    _fatGoalController = TextEditingController();
   }
 
   @override
@@ -45,6 +52,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _nameController.dispose();
     _heightController.dispose();
     _targetWeightController.dispose();
+    _proteinGoalController.dispose();
+    _carbsGoalController.dispose();
+    _fatGoalController.dispose();
     super.dispose();
   }
 
@@ -56,10 +66,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _nameController.text = profile.name ?? '';
     _heightController.text = profile.heightCm?.toString() ?? '';
     _targetWeightController.text = profile.targetWeightKg?.toString() ?? '';
+    _proteinGoalController.text = profile.proteinGoalG?.toString() ?? '';
+    _carbsGoalController.text = profile.carbsGoalG?.toString() ?? '';
+    _fatGoalController.text = profile.fatGoalG?.toString() ?? '';
     _birthDate = profile.birthDate;
     _sex = profile.sex;
     _objective = profile.objective;
     _activityLevel = profile.activityLevel;
+  }
+
+  void _suggestMacros() {
+    final goal = int.tryParse(_goalController.text.trim());
+    if (goal == null || goal <= 0) return;
+    setState(() {
+      _proteinGoalController.text = '${(goal * 0.25 / 4).round()}';
+      _carbsGoalController.text = '${(goal * 0.45 / 4).round()}';
+      _fatGoalController.text = '${(goal * 0.30 / 9).round()}';
+    });
   }
 
   Future<void> _save() async {
@@ -93,6 +116,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               activityLevel: _activityLevel,
               targetWeightKg:
                   double.tryParse(_targetWeightController.text.trim()),
+              proteinGoalG: int.tryParse(_proteinGoalController.text.trim()),
+              carbsGoalG: int.tryParse(_carbsGoalController.text.trim()),
+              fatGoalG: int.tryParse(_fatGoalController.text.trim()),
               onboardingCompleted: true,
             ),
           );
@@ -312,6 +338,77 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Meta diária de calorias (kcal)',
                   prefixIcon: Icon(Icons.local_fire_department_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Metas de macros (g)',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  TextButton.icon(
+                    onPressed: _suggestMacros,
+                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    label: const Text('Sugerir'),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _proteinGoalController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Proteína',
+                        prefixIcon: Icon(
+                          Icons.circle,
+                          size: 12,
+                          color: macroProteinColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _carbsGoalController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Hidratos',
+                        prefixIcon: Icon(
+                          Icons.circle,
+                          size: 12,
+                          color: macroCarbsColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _fatGoalController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Gordura',
+                        prefixIcon: Icon(
+                          Icons.circle,
+                          size: 12,
+                          color: macroFatColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Deixa vazio para não definires. "Sugerir" calcula a partir da meta de calorias (25/45/30%).',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               if (_error != null) ...[

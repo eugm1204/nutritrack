@@ -12,6 +12,9 @@ create table if not exists public.profiles (
   height_cm real,
   activity_level text,
   target_weight_kg real,
+  protein_goal_g int,
+  carbs_goal_g int,
+  fat_goal_g int,
   onboarding_completed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

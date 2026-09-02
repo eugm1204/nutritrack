@@ -161,6 +161,9 @@ void main() {
         'height_cm': 178,
         'activity_level': 'moderate',
         'target_weight_kg': 68,
+        'protein_goal_g': 112,
+        'carbs_goal_g': 202,
+        'fat_goal_g': 60,
         'onboarding_completed': true,
       });
       expect(profile.dailyGoalCalories, 1800);
@@ -172,7 +175,23 @@ void main() {
       expect(profile.heightCm, 178);
       expect(profile.activityLevel, 'moderate');
       expect(profile.targetWeightKg, 68);
+      expect(profile.proteinGoalG, 112);
+      expect(profile.carbsGoalG, 202);
+      expect(profile.fatGoalG, 60);
       expect(profile.onboardingCompleted, isTrue);
+    });
+
+    test('macro goals roundtrip json', () {
+      const profile = Profile(
+        id: 'u1',
+        proteinGoalG: 120,
+        carbsGoalG: 250,
+        fatGoalG: 70,
+      );
+      final decoded = Profile.fromJson(profile.toJson());
+      expect(decoded.proteinGoalG, 120);
+      expect(decoded.carbsGoalG, 250);
+      expect(decoded.fatGoalG, 70);
     });
 
     test('serializes birth date as ISO date', () {
