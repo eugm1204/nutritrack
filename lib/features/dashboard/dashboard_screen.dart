@@ -854,13 +854,24 @@ class _HeaderAvatar extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.25),
             border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
           ),
-          clipBehavior: Clip.antiAlias,
           alignment: Alignment.center,
           child: avatarUrl != null
-              ? Image.network(
-                  avatarUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => _InitialText(initial: initial),
+              ? ClipOval(
+                  child: SizedBox(
+                    width: 38,
+                    height: 38,
+                    child: Image.network(
+                      avatarUrl,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) =>
+                          progress == null
+                              ? child
+                              : Container(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                      errorBuilder: (_, _, _) => _InitialText(initial: initial),
+                    ),
+                  ),
                 )
               : _InitialText(initial: initial),
         ),

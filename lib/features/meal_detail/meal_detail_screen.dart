@@ -191,6 +191,20 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                       widget.meal.imageUrl!,
                       height: 180,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) =>
+                          progress == null
+                              ? child
+                              : Container(
+                                  height: 180,
+                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                  ),
+                                ),
                       errorBuilder: (_, _, _) => Container(
                         height: 180,
                         color: theme.colorScheme.surfaceContainerHighest,

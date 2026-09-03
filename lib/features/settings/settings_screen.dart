@@ -275,14 +275,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           width: 3,
                         ),
                       ),
-                      clipBehavior: Clip.antiAlias,
                       alignment: Alignment.center,
                       child: _avatarUrl != null
-                          ? Image.network(
-                              _avatarUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) =>
-                                  const Icon(Icons.person, size: 44),
+                          ? ClipOval(
+                              child: SizedBox(
+                                width: 90,
+                                height: 90,
+                                child: Image.network(
+                                  _avatarUrl!,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, progress) =>
+                                      progress == null
+                                          ? child
+                                          : Container(
+                                              color: theme
+                                                  .colorScheme
+                                                  .surfaceContainerHighest,
+                                            ),
+                                  errorBuilder: (_, _, _) =>
+                                      const Icon(Icons.person, size: 44),
+                                ),
+                              ),
                             )
                           : const Icon(Icons.person, size: 44),
                     ),

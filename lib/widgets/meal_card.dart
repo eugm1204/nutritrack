@@ -120,7 +120,19 @@ class _MealThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = 58.0;
-    final thumb = Container(
+    final image = SizedBox(
+      width: size,
+      height: size,
+      child: meal.imageUrl != null
+          ? Image.network(
+              meal.imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _fallback(),
+            )
+          : _fallback(),
+    );
+    final clip = ClipRRect(borderRadius: BorderRadius.circular(14), child: image);
+    final withShadow = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
@@ -133,18 +145,11 @@ class _MealThumbnail extends StatelessWidget {
           ),
         ],
       ),
-      child: meal.imageUrl != null
-          ? Image.network(
-              meal.imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _fallback(),
-            )
-          : _fallback(),
+      child: clip,
     );
-    final clip = ClipRRect(borderRadius: BorderRadius.circular(14), child: thumb);
     return showHero
-        ? Hero(tag: 'meal-image-${meal.id}', child: clip)
-        : clip;
+        ? Hero(tag: 'meal-image-${meal.id}', child: withShadow)
+        : withShadow;
   }
 
   Widget _fallback() {
