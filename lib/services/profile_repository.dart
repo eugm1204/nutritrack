@@ -1,9 +1,12 @@
+import 'package:cross_file/cross_file.dart';
+import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
 
 class ProfileRepository {
   final SupabaseClient _client;
+  static const _avatarsBucket = 'avatars';
 
   ProfileRepository(this._client);
 
@@ -25,5 +28,22 @@ class ProfileRepository {
         .select()
         .single();
     return Profile.fromJson(row);
+  }
+
+  Future<String> uploadAvatar(XFile file, String userId) async {
+    final bytes = await file.readAsBytes();
+    final ext = p.extension(file.name).isEmpty ? '.jpg' : p.extension(file.name);
+    final path = '$userId/avatar$ext';
+
+    await _client.storage.from(_avatarsBucket).uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: file.mimeType ?? 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    return _client.storage.from(_avatarsBucket).getPublicUrl(path);
   }
 }

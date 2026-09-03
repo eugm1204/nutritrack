@@ -21,6 +21,7 @@ class DashboardState {
   final int waterCups;
   final List<FavoriteMeal> favorites;
   final String objective;
+  final String? avatarUrl;
 
   const DashboardState({
     required this.date,
@@ -38,6 +39,7 @@ class DashboardState {
     this.waterCups = 0,
     this.favorites = const [],
     this.objective = 'maintain',
+    this.avatarUrl,
   });
 
   bool get hasMacroGoals =>
@@ -108,6 +110,7 @@ class DashboardController extends AsyncNotifier<DashboardState> {
       waterCups: water,
       favorites: favorites,
       objective: profile.objective,
+      avatarUrl: profile.avatarUrl,
     );
   }
 
@@ -217,6 +220,7 @@ extension on AsyncValue<DashboardState> {
       waterCups: waterCups ?? value.waterCups,
       favorites: favorites ?? value.favorites,
       objective: value.objective,
+      avatarUrl: value.avatarUrl,
     ));
   }
 }

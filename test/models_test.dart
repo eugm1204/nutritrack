@@ -1,7 +1,9 @@
+﻿import 'package:calorie_tracker/models/custom_food.dart';
 import 'package:calorie_tracker/models/meal.dart';
 import 'package:calorie_tracker/models/meal_item.dart';
 import 'package:calorie_tracker/models/profile.dart';
 import 'package:calorie_tracker/models/vision_result.dart';
+import 'package:calorie_tracker/services/food_search_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,7 +16,7 @@ void main() {
         carbs: 43.1,
         fat: 0.5,
         grams: 150,
-        portionRef: '1 chávena de arroz',
+        portionRef: '1 chÃ¡vena de arroz',
         confidence: 0.9,
       );
       final decoded = MealItem.fromJson(item.toJson());
@@ -24,7 +26,7 @@ void main() {
       expect(decoded.carbs, 43.1);
       expect(decoded.fat, 0.5);
       expect(decoded.grams, 150);
-      expect(decoded.portionRef, '1 chávena de arroz');
+      expect(decoded.portionRef, '1 chÃ¡vena de arroz');
       expect(decoded.confidence, 0.9);
     });
 
@@ -72,7 +74,7 @@ void main() {
         'id': 'abc',
         'user_id': 'u1',
         'image_url': 'https://example.com/f.jpg',
-        'meal_name': 'Almoço',
+        'meal_name': 'AlmoÃ§o',
         'total_calories': 650,
         'consumed_at': '2026-09-02T12:00:00Z',
         'items': [
@@ -90,7 +92,7 @@ void main() {
 
     test('tolerates empty or null items', () {
       final meal = Meal.fromJson({'id': 'x', 'user_id': 'u', 'total_calories': 0});
-      expect(meal.items, isEmpty);
+expect(meal.items, isEmpty);
       expect(meal.mealName, 'Refeição');
     });
   });
@@ -98,7 +100,7 @@ void main() {
   group('VisionAnalysis', () {
     test('parses analysis result with macros', () {
       final analysis = VisionAnalysis.fromJson({
-        'mealName': 'Almoço',
+        'mealName': 'AlmoÃ§o',
         'totalCalories': 650,
         'totalProtein': 35.5,
         'items': [
@@ -109,18 +111,18 @@ void main() {
             'carbs': 43.0,
             'fat': 0.5,
             'grams': 150,
-            'portionRef': '1 chávena de arroz',
+            'portionRef': '1 chÃ¡vena de arroz',
             'confidence': 0.92,
           },
         ],
       });
 
-      expect(analysis.mealName, 'Almoço');
+      expect(analysis.mealName, 'AlmoÃ§o');
       expect(analysis.totalCalories, 650);
       expect(analysis.totalProtein, 35.5);
       expect(analysis.items.single.grams, 150);
       expect(analysis.items.single.protein, 4.0);
-      expect(analysis.items.single.portionRef, '1 chávena de arroz');
+      expect(analysis.items.single.portionRef, '1 chÃ¡vena de arroz');
     });
 
     test('falls back to summing items when totalCalories missing', () {
@@ -155,7 +157,7 @@ void main() {
         'daily_goal_calories': 1800,
         'weight_kg': 72.5,
         'objective': 'lose',
-        'name': 'João',
+        'name': 'JoÃ£o',
         'birth_date': '1990-05-10',
         'sex': 'male',
         'height_cm': 178,
@@ -169,7 +171,7 @@ void main() {
       expect(profile.dailyGoalCalories, 1800);
       expect(profile.weightKg, 72.5);
       expect(profile.objective, 'lose');
-      expect(profile.name, 'João');
+      expect(profile.name, 'JoÃ£o');
       expect(profile.birthDate, DateTime(1990, 5, 10));
       expect(profile.sex, 'male');
       expect(profile.heightCm, 178);
@@ -194,10 +196,65 @@ void main() {
       expect(decoded.fatGoalG, 70);
     });
 
-    test('serializes birth date as ISO date', () {
+test('serializes birth date as ISO date', () {
       final profile = Profile(id: 'u1', birthDate: DateTime(1990, 5, 10));
       expect(profile.toJson()['birth_date'], '1990-05-10');
       expect(profile.toJson()['onboarding_completed'], isFalse);
+    });
+
+    test('serializes avatar url', () {
+      final profile = Profile(id: 'u1', avatarUrl: 'https://x/a.jpg');
+      expect(profile.toJson()['avatar_url'], 'https://x/a.jpg');
+    });
+  });
+
+  group('CustomFood', () {
+    test('roundtrip json', () {
+      const food = CustomFood(
+        id: 'abc',
+        name: 'Iogurte Magro Lidl',
+        brand: 'Lidl',
+        kcalPer100g: 45,
+        protein: 4.5,
+        carbs: 5,
+        fat: 0.5,
+        referenceGrams: 150,
+      );
+      final decoded = CustomFood.fromJson(food.toJson());
+      expect(decoded.id, 'abc');
+      expect(decoded.name, 'Iogurte Magro Lidl');
+      expect(decoded.brand, 'Lidl');
+      expect(decoded.kcalPer100g, 45);
+      expect(decoded.protein, 4.5);
+      expect(decoded.carbs, 5);
+      expect(decoded.fat, 0.5);
+      expect(decoded.referenceGrams, 150);
+    });
+
+    test('defaults reference grams to 100', () {
+      const food = CustomFood(name: 'X', kcalPer100g: 100);
+      expect(food.referenceGrams, 100);
+    });
+  });
+
+group('FoodSearchService local', () {
+    final service = FoodSearchService();
+
+    test('finds branded foods in local base', () {
+      final results = service.searchLocal('mimosa');
+      expect(results, isNotEmpty);
+      expect(results.first.name, contains('Mimosa'));
+      expect(results.first.kcalPer100g, isNotNull);
+    });
+
+    test('finds supermarket foods', () {
+      final results = service.searchLocal('continente');
+      expect(results, isNotEmpty);
+      expect(results.first.referenceGrams, greaterThan(0));
+    });
+
+    test('empty query returns nothing', () {
+      expect(service.searchLocal('zzzz'), isEmpty);
     });
   });
 }

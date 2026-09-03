@@ -43,6 +43,7 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               _GradientHeader(
                 name: state.name,
+                avatarUrl: state.avatarUrl,
                 streakDays: state.streakDays,
                 onSettings: () => context.push('/settings'),
                 onLogout: () =>
@@ -141,12 +142,14 @@ class DashboardScreen extends ConsumerWidget {
 
 class _GradientHeader extends StatelessWidget {
   final String? name;
+  final String? avatarUrl;
   final int streakDays;
   final VoidCallback onSettings;
   final VoidCallback onLogout;
 
   const _GradientHeader({
     this.name,
+    this.avatarUrl,
     this.streakDays = 0,
     required this.onSettings,
     required this.onLogout,
@@ -236,10 +239,10 @@ class _GradientHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                tooltip: 'Definições',
-                onPressed: onSettings,
+              _HeaderAvatar(
+                avatarUrl: avatarUrl,
+                name: name,
+                onTap: onSettings,
               ),
               IconButton(
                 icon: const Icon(Icons.logout, color: Colors.white),
@@ -817,6 +820,70 @@ class _WeeklyChart extends StatelessWidget {
   String _dayAbbrev(DateTime day) {
     const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     return weekdays[day.weekday - 1];
+  }
+}
+
+class _HeaderAvatar extends StatelessWidget {
+  final String? avatarUrl;
+  final String? name;
+  final VoidCallback onTap;
+
+  const _HeaderAvatar({
+    required this.avatarUrl,
+    required this.name,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = this.avatarUrl;
+    final initial = name != null && name!.trim().isNotEmpty
+        ? name!.trim()[0].toUpperCase()
+        : '🥗';
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.25),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+          ),
+          clipBehavior: Clip.antiAlias,
+          alignment: Alignment.center,
+          child: avatarUrl != null
+              ? Image.network(
+                  avatarUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => _InitialText(initial: initial),
+                )
+              : _InitialText(initial: initial),
+        ),
+      ),
+    );
+  }
+}
+
+class _InitialText extends StatelessWidget {
+  final String initial;
+
+  const _InitialText({required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      initial,
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w900,
+        fontSize: 18,
+      ),
+    );
   }
 }
 

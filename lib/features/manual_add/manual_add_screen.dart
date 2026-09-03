@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme.dart';
+import '../../models/custom_food.dart';
 import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
 import '../../services/food_search_service.dart';
@@ -178,6 +180,7 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
   bool _searching = false;
   List<FoodProduct> _results = [];
   List<MealItem> _recents = [];
+  List<CustomFood> _customFoods = [];
   String? _error;
 
   final _manualNameController = TextEditingController();
@@ -188,12 +191,76 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
   void initState() {
     super.initState();
     _loadRecents();
+    _loadCustomFoods();
   }
 
   Future<void> _loadRecents() async {
     final recents = await ref.read(recentFoodsServiceProvider).load();
     if (!mounted) return;
     setState(() => _recents = recents);
+  }
+
+  Future<void> _loadCustomFoods() async {
+    final user = ref.read(supabaseProvider).auth.currentUser;
+    if (user == null) return;
+    try {
+      final foods = await ref.read(customFoodsRepositoryProvider).fetch(user.id);
+      if (!mounted) return;
+      setState(() => _customFoods = foods);
+    } catch (e) {
+      debugPrint('[customFoods/load] Erro: $e');
+    }
+  }
+
+  Future<void> _openCreateFoodDialog() async {
+    final saved = await showDialog<CustomFood>(
+      context: context,
+      builder: (context) => const _CreateFoodDialog(),
+    );
+    if (saved == null) return;
+    final user = ref.read(supabaseProvider).auth.currentUser;
+    if (user == null) return;
+    try {
+      await ref.read(customFoodsRepositoryProvider).add(user.id, saved);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${saved.name} criado! 🎉')),
+        );
+      }
+      await _loadCustomFoods();
+    } catch (e) {
+      debugPrint('[customFoods/add] Erro: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível criar o alimento.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteCustomFood(CustomFood food) async {
+    final user = ref.read(supabaseProvider).auth.currentUser;
+    if (user == null || food.id == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Apagar alimento'),
+        content: Text('Apagar "${food.name}" da tua lista?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Apagar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref.read(customFoodsRepositoryProvider).delete(food.id!, user.id);
+    await _loadCustomFoods();
   }
 
   @override
@@ -218,8 +285,7 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
       _error = null;
     });
     try {
-      final results =
-          await ref.read(foodSearchServiceProvider).search(query.trim());
+      final results = await ref.read(foodSearchServiceProvider).search(query.trim());
       if (!mounted) return;
       setState(() {
         _results = results;
@@ -243,7 +309,20 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
     ref.read(manualAddControllerProvider.notifier).addItem(MealItem(
           name: product.name,
           calories: product.kcalPer100g?.round() ?? 0,
-          grams: product.kcalPer100g != null ? 100 : null,
+          grams: product.kcalPer100g != null ? product.referenceGrams : null,
+          confirmed: true,
+        ));
+    Navigator.of(context).pop();
+  }
+
+  void _addCustomFood(CustomFood food) {
+    ref.read(manualAddControllerProvider.notifier).addItem(MealItem(
+          name: food.name,
+          calories: food.kcalPer100g,
+          protein: food.protein,
+          carbs: food.carbs,
+          fat: food.fat,
+          grams: food.referenceGrams,
           confirmed: true,
         ));
     Navigator.of(context).pop();
@@ -303,14 +382,50 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
                     dense: true,
                     leading: const Icon(Icons.history, size: 18),
                     title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text('${item.calories} kcal'),
+                    subtitle: Text(
+                      item.grams != null
+                          ? '${item.calories} kcal · ${item.grams!.round()} g'
+                          : '${item.calories} kcal',
+                    ),
                     trailing: const Icon(Icons.add_circle_outline),
                     onTap: () {
-                      ref
-                          .read(manualAddControllerProvider.notifier)
-                          .addItem(item);
+                      ref.read(manualAddControllerProvider.notifier).addItem(item);
                       Navigator.of(context).pop();
                     },
+                  );
+                },
+              ),
+            ),
+          ],
+          if (_customFoods.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Os teus alimentos ⭐',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _customFoods.length,
+                itemBuilder: (context, index) {
+                  final food = _customFoods[index];
+                  return ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.star, size: 18, color: macroCarbsColor),
+                    title: Text(food.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(
+                      '${food.kcalPer100g} kcal/100g · porção ${food.referenceGrams.round()} g'
+                      '${food.brand != null ? ' · ${food.brand}' : ''}',
+                    ),
+                    trailing: const Icon(Icons.add_circle_outline),
+                    onTap: () => _addCustomFood(food),
+                    onLongPress: () => _deleteCustomFood(food),
                   );
                 },
               ),
@@ -326,6 +441,16 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
           ],
           if (_results.isNotEmpty) ...[
             const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Resultados (valores por 100 g)',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
@@ -336,9 +461,11 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
                   return ListTile(
                     dense: true,
                     title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: kcal != null
-                        ? Text('${kcal.round()} kcal / 100g')
-                        : Text('Sem dados de calorias'),
+                    subtitle: Text(
+                      kcal != null
+                          ? '${kcal.round()} kcal/100g · porção ${product.referenceGrams.round()} g'
+                          : 'Sem dados de calorias',
+                    ),
                     trailing: const Icon(Icons.add_circle_outline),
                     onTap: kcal != null ? () => _addProduct(product) : null,
                   );
@@ -346,6 +473,12 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
               ),
             ),
           ],
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _openCreateFoodDialog,
+            icon: const Icon(Icons.add_box_outlined),
+            label: const Text('Criar o meu alimento'),
+          ),
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: () => setState(() => _showManual = !_showManual),
@@ -378,6 +511,163 @@ class _AddItemSheetState extends ConsumerState<_AddItemSheet> {
           const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+}
+
+class _CreateFoodDialog extends StatefulWidget {
+  const _CreateFoodDialog();
+
+  @override
+  State<_CreateFoodDialog> createState() => _CreateFoodDialogState();
+}
+
+class _CreateFoodDialogState extends State<_CreateFoodDialog> {
+  final _nameController = TextEditingController();
+  final _brandController = TextEditingController();
+  final _kcalController = TextEditingController();
+  final _proteinController = TextEditingController();
+  final _carbsController = TextEditingController();
+  final _fatController = TextEditingController();
+  final _gramsController = TextEditingController(text: '100');
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _brandController.dispose();
+    _kcalController.dispose();
+    _proteinController.dispose();
+    _carbsController.dispose();
+    _fatController.dispose();
+    _gramsController.dispose();
+    super.dispose();
+  }
+
+  CustomFood? _build() {
+    final name = _nameController.text.trim();
+    final kcal = int.tryParse(_kcalController.text.trim());
+    final grams = double.tryParse(_gramsController.text.trim()) ?? 100;
+    if (name.isEmpty || kcal == null || kcal <= 0 || grams <= 0) return null;
+
+    return CustomFood(
+      name: name,
+      brand: _brandController.text.trim().isEmpty
+          ? null
+          : _brandController.text.trim(),
+      kcalPer100g: kcal,
+      protein: double.tryParse(_proteinController.text.trim()),
+      carbs: double.tryParse(_carbsController.text.trim()),
+      fat: double.tryParse(_fatController.text.trim()),
+      referenceGrams: grams,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: const Text('Criar alimento 🍎'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Nome *',
+                prefixIcon: Icon(Icons.fastfood_outlined),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _brandController,
+              decoration: const InputDecoration(
+                labelText: 'Marca (opcional)',
+                prefixIcon: Icon(Icons.storefront_outlined),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _kcalController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Calorias por 100 g *',
+                prefixIcon: Icon(Icons.local_fire_department_outlined),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _proteinController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Proteína',
+                      prefixIcon: Icon(Icons.circle, size: 12, color: macroProteinColor),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _carbsController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Hidratos',
+                      prefixIcon: Icon(Icons.circle, size: 12, color: macroCarbsColor),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _fatController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Gordura',
+                      prefixIcon: Icon(Icons.circle, size: 12, color: macroFatColor),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _gramsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Porção de referência (g)',
+                prefixIcon: Icon(Icons.straighten),
+                helperText: 'Ex: 1 iogurte = 125 g',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Valores por 100 g. A porção de referência é a quantidade habitual '
+              '(ex: 1 iogurte, 1 fatia, 1 copo).',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final food = _build();
+            if (food == null) return;
+            Navigator.pop(context, food);
+          },
+          child: const Text('Guardar'),
+        ),
+      ],
     );
   }
 }

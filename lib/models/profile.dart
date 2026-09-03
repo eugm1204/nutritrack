@@ -12,6 +12,7 @@ class Profile {
   final int? proteinGoalG;
   final int? carbsGoalG;
   final int? fatGoalG;
+  final String? avatarUrl;
   final bool onboardingCompleted;
 
   const Profile({
@@ -28,6 +29,7 @@ class Profile {
     this.proteinGoalG,
     this.carbsGoalG,
     this.fatGoalG,
+    this.avatarUrl,
     this.onboardingCompleted = false,
   });
 
@@ -48,6 +50,7 @@ class Profile {
       proteinGoalG: (json['protein_goal_g'] as num?)?.toInt(),
       carbsGoalG: (json['carbs_goal_g'] as num?)?.toInt(),
       fatGoalG: (json['fat_goal_g'] as num?)?.toInt(),
+      avatarUrl: json['avatar_url'] as String?,
       onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
     );
   }
@@ -67,6 +70,7 @@ class Profile {
         if (proteinGoalG != null) 'protein_goal_g': proteinGoalG,
         if (carbsGoalG != null) 'carbs_goal_g': carbsGoalG,
         if (fatGoalG != null) 'fat_goal_g': fatGoalG,
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
         'onboarding_completed': onboardingCompleted,
       };
 
@@ -83,6 +87,7 @@ class Profile {
     int? proteinGoalG,
     int? carbsGoalG,
     int? fatGoalG,
+    String? avatarUrl,
     bool? onboardingCompleted,
   }) {
     return Profile(
@@ -99,6 +104,7 @@ class Profile {
       proteinGoalG: proteinGoalG ?? this.proteinGoalG,
       carbsGoalG: carbsGoalG ?? this.carbsGoalG,
       fatGoalG: fatGoalG ?? this.fatGoalG,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

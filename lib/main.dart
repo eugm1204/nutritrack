@@ -10,6 +10,7 @@ import 'core/config.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
 import 'features/splash/splash_gate.dart';
+import 'services/error_reporter.dart';
 
 final updateAvailableNotifier = ValueNotifier<bool>(false);
 
@@ -30,8 +31,35 @@ Future<void> main() async {
   }
 
   _watchForUpdates();
+  _setupErrorTelemetry();
 
   runApp(const ProviderScope(child: NutriTrackApp()));
+}
+
+void _setupErrorTelemetry() {
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    previousOnError?.call(details);
+    try {
+      ErrorReporter(Supabase.instance.client).report(
+        action: 'flutter_error',
+        message: details.exceptionAsString(),
+        stack: details.stack?.toString(),
+      );
+    } catch (_) {}
+  };
+
+  if (kIsWeb) return;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    try {
+      ErrorReporter(Supabase.instance.client).report(
+        action: 'platform_error',
+        message: error.toString(),
+        stack: stack.toString(),
+      );
+    } catch (_) {}
+    return true;
+  };
 }
 
 void _watchForUpdates() {

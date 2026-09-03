@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
 import '../services/ai_coach_service.dart';
+import '../services/custom_foods_repository.dart';
+import '../services/error_reporter.dart';
 import '../services/favorites_service.dart';
 import '../services/food_search_service.dart';
 import '../services/meal_repository.dart';
@@ -43,6 +45,14 @@ final recentFoodsServiceProvider = Provider<RecentFoodsService>(
 
 final favoritesServiceProvider = Provider<FavoritesService>(
   (ref) => FavoritesService(),
+);
+
+final customFoodsRepositoryProvider = Provider<CustomFoodsRepository>(
+  (ref) => CustomFoodsRepository(ref.watch(supabaseProvider)),
+);
+
+final errorReporterProvider = Provider<ErrorReporter>(
+  (ref) => ErrorReporter(ref.watch(supabaseProvider)),
 );
 
 final profileProvider = FutureProvider<Profile>((ref) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme.dart';
@@ -28,7 +29,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _sex;
   String _objective = 'maintain';
   String? _activityLevel;
+  String? _avatarUrl;
   bool _saving = false;
+  bool _uploadingAvatar = false;
   String? _error;
   bool _populated = false;
 
@@ -73,6 +76,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _sex = profile.sex;
     _objective = profile.objective;
     _activityLevel = profile.activityLevel;
+    _avatarUrl = profile.avatarUrl;
+  }
+
+  Future<void> _changeAvatar() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+
+    setState(() {
+      _uploadingAvatar = true;
+      _error = null;
+    });
+    try {
+      final userId = ref.read(supabaseProvider).auth.currentUser!.id;
+      final current = ref.read(profileProvider).value ??
+          const Profile(id: '');
+      final url = await ref.read(profileRepositoryProvider).uploadAvatar(file, userId);
+      await ref.read(profileRepositoryProvider).update(
+            userId,
+            current.copyWith(avatarUrl: url, onboardingCompleted: true),
+          );
+      ref.invalidate(profileProvider);
+      ref.invalidate(dashboardControllerProvider);
+      if (!mounted) return;
+      setState(() => _avatarUrl = url);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto de perfil atualizada! 📸')),
+      );
+    } catch (e) {
+      debugPrint('[avatar] Erro: $e');
+      if (mounted) {
+        setState(() => _error = 'Não foi possível atualizar a foto.');
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
+    }
   }
 
   void _suggestMacros() {
@@ -218,6 +261,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        border: Border.all(
+                          color: theme.colorScheme.primary,
+                          width: 3,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      alignment: Alignment.center,
+                      child: _avatarUrl != null
+                          ? Image.network(
+                              _avatarUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const Icon(Icons.person, size: 44),
+                            )
+                          : const Icon(Icons.person, size: 44),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: _uploadingAvatar ? null : _changeAvatar,
+                      icon: _uploadingAvatar
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.photo_camera_outlined),
+                      label: Text(_uploadingAvatar
+                          ? 'A enviar...'
+                          : _avatarUrl != null
+                              ? 'Alterar foto'
+                              : 'Adicionar foto'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               Text('Perfil', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 12),
               TextField(
