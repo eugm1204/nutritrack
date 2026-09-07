@@ -47,7 +47,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final loading = ref.watch(authControllerProvider).loading;
 
     return Scaffold(
@@ -62,26 +61,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    width: 96,
-                    height: 96,
+                    width: 84,
+                    height: 84,
                     decoration: BoxDecoration(
-                      gradient: primaryGradient,
-                      borderRadius: BorderRadius.circular(28),
+                      color: appGreen,
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     alignment: Alignment.center,
                     child: const Icon(
-                      Icons.restaurant_menu,
-                      size: 52,
+                      Icons.restaurant,
+                      size: 44,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 20),
+                  const Text(
                     'NutriTrack',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.primary,
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: appTextPrimary,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -90,8 +91,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? 'Cria a tua conta para começar'
                         : 'Entra para registar as tuas refeições',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: appTextSecondary,
                     ),
                   ),
                   const SizedBox(height: 32),

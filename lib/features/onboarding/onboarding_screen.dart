@@ -376,7 +376,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _ObjectiveCard(
-                emoji: objectiveEmojis[entry.key]!,
+                icon: entry.key == 'lose'
+                    ? Icons.trending_down
+                    : entry.key == 'gain'
+                        ? Icons.fitness_center
+                        : Icons.balance,
                 label: entry.value,
                 selected: _objective == entry.key,
                 onTap: () => setState(() => _objective = entry.key),
@@ -390,7 +394,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   () => _targetWeight = double.tryParse(value.trim())),
               decoration: const InputDecoration(
                 labelText: 'Peso alvo (kg)',
-                prefixIcon: Icon(Icons.flag_outlined),
+                prefixIcon: Icon(Icons.flag_outlined, size: 18),
               ),
             ),
           ],
@@ -441,25 +445,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: primaryGradientFor(theme.brightness),
+                color: appGreen.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: appGreen.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
-                  Text(
-                    'Sugestão para ti',
+                  const Text(
+                    'SUGESTÃO PARA TI',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
+                      color: appTextSecondary,
+                      letterSpacing: 0.6,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     '$_suggestedGoal kcal/dia',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: appTextPrimary,
                       fontSize: 30,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.8,
                     ),
                   ),
                 ],
@@ -469,15 +477,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: appFill,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
+              child: const Text(
                 'Completa os dados anteriores (peso, altura e atividade) '
-                'para receberes uma sugestão personalizada. 🧮',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                'para receberes uma sugestão personalizada.',
+                style: TextStyle(fontSize: 13.5, color: appTextSecondary, height: 1.4),
               ),
             ),
           const SizedBox(height: 16),
@@ -486,7 +492,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               labelText: 'Meta diária de calorias (kcal)',
-              prefixIcon: Icon(Icons.local_fire_department_outlined),
+              prefixIcon: Icon(Icons.local_fire_department_outlined, size: 18),
             ),
           ),
         ];
@@ -495,13 +501,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 class _ObjectiveCard extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
   const _ObjectiveCard({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -509,43 +515,43 @@ class _ObjectiveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Material(
-      color: selected
-          ? theme.colorScheme.primary.withValues(alpha: 0.12)
-          : theme.colorScheme.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(16),
+      color: selected ? appGreen.withValues(alpha: 0.06) : appCard,
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected
-                  ? theme.colorScheme.primary
-                  : Colors.transparent,
-              width: 2,
+              color: selected ? appGreen : appHairline,
+              width: selected ? 1.5 : 1,
             ),
           ),
           child: Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 26)),
+              Icon(
+                icon,
+                size: 22,
+                color: selected ? appGreen : appTextSecondary,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   label,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: appTextPrimary,
                   ),
                 ),
               ),
               Icon(
                 selected ? Icons.check_circle : Icons.circle_outlined,
-                color: selected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outlineVariant,
+                size: 20,
+                color: selected ? appGreen : appHairline,
               ),
             ],
           ),

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/history/history_controller.dart';
+import '../core/theme.dart';
 import '../providers/providers.dart';
 import '../services/ai_coach_service.dart';
 
@@ -135,22 +136,17 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outlineVariant,
+                  color: appHairline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'O teu coach semanal 🧠',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-            ),
+            Text('O teu coach semanal', style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
-            Text(
+            const Text(
               'Análise dos últimos 7 dias',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 13.5, color: appTextSecondary),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -161,9 +157,13 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(_error!, textAlign: TextAlign.center),
+                              Text(
+                                _error!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 13.5, color: appRed),
+                              ),
                               const SizedBox(height: 12),
-                              FilledButton.tonal(
+                              OutlinedButton(
                                 onPressed: _load,
                                 child: const Text('Tentar de novo'),
                               ),
@@ -176,44 +176,49 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.10),
+                                color: appGreen.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: appGreen.withValues(alpha: 0.25),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('🤖', style: TextStyle(fontSize: 28)),
-                                  const SizedBox(height: 8),
+                                  const Icon(Icons.psychology_outlined,
+                                      size: 22, color: appGreen),
+                                  const SizedBox(height: 10),
                                   Text(
                                     _response!.summary,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                    style: const TextStyle(
+                                      fontSize: 14.5,
+                                      color: appTextPrimary,
+                                      height: 1.45,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Dicas da semana 💡',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 18),
+                            Text('Dicas da semana', style: theme.textTheme.titleMedium),
+                            const SizedBox(height: 10),
                             for (final tip in _response!.tips)
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.only(bottom: 12),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('✅', style: TextStyle(fontSize: 16)),
+                                    const Icon(Icons.check_circle,
+                                        size: 16, color: appGreen),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         tip,
-                                        style: theme.textTheme.bodyMedium,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: appTextPrimary,
+                                          height: 1.4,
+                                        ),
                                       ),
                                     ),
                                   ],

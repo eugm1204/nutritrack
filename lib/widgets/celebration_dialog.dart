@@ -1,6 +1,8 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/theme.dart';
+
 class CelebrationDialog extends StatefulWidget {
   final int consumedCalories;
   final int goalCalories;
@@ -32,7 +34,6 @@ class _CelebrationDialogState extends State<CelebrationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Dialog(
       child: Stack(
         alignment: Alignment.center,
@@ -42,38 +43,33 @@ class _CelebrationDialogState extends State<CelebrationDialog> {
               child: ConfettiWidget(
                 confettiController: _confettiController,
                 blastDirectionality: BlastDirectionality.explosive,
-                numberOfParticles: 60,
+                numberOfParticles: 40,
                 gravity: 0.25,
-                colors: const [
-                  Color(0xFF2E7D32),
-                  Color(0xFF66BB6A),
-                  Color(0xFFF9A825),
-                  Color(0xFFE8590C),
-                  Color(0xFF7C4DFF),
-                ],
+                colors: const [appGreen, appOrange, appTextSecondary],
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(28),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('🎉', style: TextStyle(fontSize: 56)),
-                const SizedBox(height: 12),
-                Text(
-                  'Meta dentro do alvo!',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
+                const Text('🎉', style: TextStyle(fontSize: 44)),
+                const SizedBox(height: 14),
+                const Text(
+                  'Meta dentro do alvo',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: appTextPrimary,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
-                  '${widget.consumedCalories} de ${widget.goalCalories} kcal — excelente trabalho! 💪',
+                  '${widget.consumedCalories} de ${widget.goalCalories} kcal — bom trabalho.',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: appTextSecondary),
                 ),
                 const SizedBox(height: 20),
                 FilledButton(

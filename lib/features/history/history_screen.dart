@@ -29,7 +29,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Histórico 📅',
+          'Histórico',
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
       ),
@@ -101,31 +101,23 @@ class _InsightsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                'Insights da semana 📈',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
+          Text('Insights da semana', style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: _InsightTile(
                   icon: Icons.local_fire_department_outlined,
-                  iconColor: theme.colorScheme.primary,
+                  iconColor: appGreen,
                   label: 'Média/dia',
                   value: '${insights.avgKcalPerDay} kcal',
                 ),
               ),
+              const SizedBox(width: 10),
               Expanded(
                 child: _InsightTile(
                   icon: Icons.calendar_view_day_outlined,
-                  iconColor: macroCarbsColor,
+                  iconColor: appTextSecondary,
                   label: 'Dias registados',
                   value: '${insights.daysLogged}/7',
                 ),
@@ -138,17 +130,18 @@ class _InsightsCard extends StatelessWidget {
               Expanded(
                 child: _InsightTile(
                   icon: Icons.thumb_up_alt_outlined,
-                  iconColor: macroProteinColor,
+                  iconColor: appGreen,
                   label: 'Melhor dia',
                   value: insights.bestDay != null
                       ? '${_dayShort(insights.bestDay!)} · ${insights.bestDayKcal} kcal'
                       : '—',
                 ),
               ),
+              const SizedBox(width: 10),
               Expanded(
                 child: _InsightTile(
                   icon: Icons.thumb_down_alt_outlined,
-                  iconColor: theme.colorScheme.error,
+                  iconColor: appTextSecondary,
                   label: 'Pior dia',
                   value: insights.worstDay != null
                       ? '${_dayShort(insights.worstDay!)} · ${insights.worstDayKcal} kcal'
@@ -165,10 +158,8 @@ class _InsightsCard extends StatelessWidget {
                   change != null && change <= 0
                       ? Icons.trending_down
                       : Icons.trending_up,
-                  size: 18,
-                  color: change != null && change <= 0
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.error,
+                  size: 16,
+                  color: change != null && change <= 0 ? appGreen : appTextSecondary,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -176,11 +167,12 @@ class _InsightsCard extends StatelessWidget {
                     change == null
                         ? 'Sem dados da semana anterior'
                         : '${change.abs()}% ${change <= 0 ? 'menos' : 'mais'} calorias que a semana anterior',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
                       color: change != null && change <= 0
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.error,
+                          ? appGreen
+                          : appTextSecondary,
                     ),
                   ),
                 ),
@@ -190,10 +182,10 @@ class _InsightsCard extends StatelessWidget {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.tonalIcon(
+            child: OutlinedButton.icon(
               onPressed: onCoach,
-              icon: const Icon(Icons.psychology_outlined),
-              label: const Text('Resumo do coach 🧠'),
+              icon: const Icon(Icons.psychology_outlined, size: 18),
+              label: const Text('Resumo do coach'),
             ),
           ),
         ],
@@ -230,16 +222,15 @@ class _InsightTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: appFill.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          Icon(icon, size: 16, color: iconColor),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -249,8 +240,9 @@ class _InsightTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: appTextSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -258,8 +250,10 @@ class _InsightTile extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: appTextPrimary,
                   ),
                 ),
               ],
@@ -290,7 +284,6 @@ class _DayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final total = meals.fold<int>(0, (sum, meal) => sum + meal.totalCalories);
     final now = DateTime.now();
     final isToday = now.year == day.year && now.month == day.month && now.day == day.day;
@@ -316,16 +309,15 @@ class _DayCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isToday
-                      ? theme.colorScheme.primary.withValues(alpha: 0.14)
-                      : theme.colorScheme.surfaceContainerHighest,
+                  color: isToday ? appGreen.withValues(alpha: 0.12) : appFill,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   dayLabel,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: isToday ? theme.colorScheme.primary : null,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: isToday ? appGreen : appTextPrimary,
                   ),
                 ),
               ),
@@ -333,38 +325,37 @@ class _DayCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   DateFormat('d MMM').format(day),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: appTextSecondary),
                 ),
               ),
               Text(
                 '$total',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              Text(
-                ' kcal',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: appTextPrimary,
                 ),
+              ),
+              const Text(
+                ' kcal',
+                style: TextStyle(fontSize: 11.5, color: appTextSecondary),
               ),
               const SizedBox(width: 4),
               Icon(
                 expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: theme.colorScheme.onSurfaceVariant,
+                color: appTextSecondary,
+                size: 20,
               ),
             ],
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 6,
-              color: total > goalCalories
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              minHeight: 5,
+              color: total > goalCalories ? appRed : appGreen,
+              backgroundColor: appFill,
             ),
           ),
           if (expanded) ...[
@@ -391,21 +382,18 @@ class _EmptyHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🗓️', style: TextStyle(fontSize: 44)),
-            const SizedBox(height: 10),
+            Icon(Icons.calendar_today_outlined, size: 32, color: appTextSecondary),
+            SizedBox(height: 10),
             Text(
               'Ainda não tens registos.\nAdiciona a tua primeira refeição!',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 13.5, color: appTextSecondary, height: 1.4),
             ),
           ],
         ),

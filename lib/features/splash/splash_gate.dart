@@ -36,57 +36,56 @@ class _SplashGateState extends State<SplashGate> {
       opacity: _opacity,
       duration: const Duration(milliseconds: 350),
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(gradient: primaryGradient),
-          alignment: Alignment.center,
+        backgroundColor: appBackground,
+        body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 700),
-                curve: Curves.easeOutBack,
+                tween: Tween(begin: 0.85, end: 1),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOut,
                 builder: (context, value, child) => Transform.scale(
                   scale: value,
-                  child: Opacity(opacity: value, child: child),
+                  child: Opacity(
+                    opacity: value < 1 ? 0.7 : 1,
+                    child: child,
+                  ),
                 ),
                 child: Container(
-                  width: 96,
-                  height: 96,
+                  width: 84,
+                  height: 84,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    color: appGreen,
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   alignment: Alignment.center,
-                  child: const Text('🍽️', style: TextStyle(fontSize: 52)),
+                  child: const Icon(
+                    Icons.restaurant,
+                    color: Colors.white,
+                    size: 44,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 900),
+                duration: const Duration(milliseconds: 800),
                 curve: Curves.easeOut,
                 builder: (context, value, child) => Opacity(
                   opacity: value,
                   child: Transform.translate(
-                    offset: Offset(0, 8 * (1 - value)),
+                    offset: Offset(0, 6 * (1 - value)),
                     child: child,
                   ),
                 ),
                 child: const Text(
                   'NutriTrack',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
+                    color: appTextPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
                   ),
                 ),
               ),

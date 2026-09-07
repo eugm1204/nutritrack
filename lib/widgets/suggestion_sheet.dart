@@ -132,21 +132,17 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outlineVariant,
+                  color: appHairline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
+            Text('O que comer?', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
             Text(
-              'O que comer? 💡',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            Text(
-              'Tens ${widget.remainingKcal} kcal restantes — 3 ideias para ti:',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              'Tens ${widget.remainingKcal} kcal restantes — 3 ideias para ti',
+              style: const TextStyle(fontSize: 13.5, color: appTextSecondary),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -157,9 +153,13 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(_error!, textAlign: TextAlign.center),
+                              Text(
+                                _error!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 13.5, color: appRed),
+                              ),
                               const SizedBox(height: 12),
-                              FilledButton.tonal(
+                              OutlinedButton(
                                 onPressed: _load,
                                 child: const Text('Tentar de novo'),
                               ),
@@ -173,7 +173,6 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: _SuggestionCard(
-                                  index: i,
                                   suggestion: _suggestions[i],
                                   registering: _registering,
                                   onRegister: () => _register(_suggestions[i]),
@@ -190,13 +189,11 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
 }
 
 class _SuggestionCard extends StatelessWidget {
-  final int index;
   final MealSuggestion suggestion;
   final bool registering;
   final VoidCallback onRegister;
 
   const _SuggestionCard({
-    required this.index,
     required this.suggestion,
     required this.registering,
     required this.onRegister,
@@ -204,36 +201,36 @@ class _SuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final emoji = index == 0 ? '🥗' : (index == 1 ? '🍽️' : '⚡');
     final kcal = suggestion.calories;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
+        color: appCard,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: appHairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   suggestion.name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: appTextPrimary,
                   ),
                 ),
               ),
               Text(
                 '$kcal kcal',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.primary,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: appGreen,
                 ),
               ),
             ],
@@ -241,9 +238,7 @@ class _SuggestionCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             suggestion.description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: const TextStyle(fontSize: 13, color: appTextSecondary, height: 1.35),
           ),
           const SizedBox(height: 10),
           Row(
@@ -254,39 +249,45 @@ class _SuggestionCard extends StatelessWidget {
                   children: [
                     Text(
                       'P ${(suggestion.protein ?? 0).toStringAsFixed(0)}g',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: macroProteinColor,
                       ),
                     ),
                     Text(
                       'H ${(suggestion.carbs ?? 0).toStringAsFixed(0)}g',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: macroCarbsColor,
                       ),
                     ),
                     Text(
                       'G ${(suggestion.fat ?? 0).toStringAsFixed(0)}g',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: macroFatColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              FilledButton.tonal(
+              FilledButton(
                 onPressed: registering ? null : onRegister,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(0, 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                 ),
                 child: registering
                     ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Registar'),
               ),

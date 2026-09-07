@@ -319,8 +319,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Perfil', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 12),
+              const _SectionLabel('PERFIL'),
+              const SizedBox(height: 10),
               TextField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
@@ -432,7 +432,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
                 onChanged: (value) => setState(() => _activityLevel = value),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              const _SectionLabel('OBJETIVOS'),
+              const SizedBox(height: 10),
               TextField(
                 controller: _goalController,
                 keyboardType: TextInputType.number,
@@ -447,12 +449,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   Text(
                     'Metas de macros (g)',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: appTextPrimary,
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: _suggestMacros,
-                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    icon: const Icon(Icons.auto_awesome, size: 16),
                     label: const Text('Sugerir'),
                   ),
                 ],
@@ -508,13 +513,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 4),
               Text(
                 'Deixa vazio para não definires. "Sugerir" calcula a partir da meta de calorias (25/45/30%).',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: const TextStyle(fontSize: 12, color: appTextSecondary),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+                Text(
+                  _error!,
+                  style: const TextStyle(fontSize: 13.5, color: appRed),
+                ),
               ],
               const SizedBox(height: 24),
               FilledButton.icon(
@@ -523,21 +529,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : const Icon(Icons.save_outlined),
+                    : const Icon(Icons.check, size: 20),
                 label: Text(_saving ? 'A guardar...' : 'Guardar'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              const _SectionLabel('DADOS'),
+              const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: _exportCsv,
-                icon: const Icon(Icons.file_download_outlined),
+                icon: const Icon(Icons.file_download_outlined, size: 18),
                 label: const Text('Exportar dados (CSV)'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+class _SectionLabel extends StatelessWidget {
+  final String text;
+
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: appTextSecondary,
+        letterSpacing: 0.6,
       ),
     );
   }

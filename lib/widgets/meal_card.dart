@@ -1,28 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../core/theme.dart';
 
-import '../../core/theme.dart';
-import '../../models/meal.dart';
 import 'pressable_card.dart';
 
-String mealTypeEmoji(DateTime time) {
-  final h = time.hour;
-  if (h < 11) return '☕';
-  if (h < 16) return '🍽️';
-  if (h < 22) return '🌙';
-  return '🌌';
-}
-
-Color mealTypeColor(DateTime time) {
-  final h = time.hour;
-  if (h < 11) return morningColor;
-  if (h < 16) return lunchColor;
-  if (h < 22) return dinnerColor;
-  return nightColor;
-}
-
 class MealCard extends StatelessWidget {
-  final Meal meal;
+  final dynamic meal;
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final bool showHero;
@@ -37,16 +20,13 @@ class MealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final typeColor = mealTypeColor(meal.consumedAt);
-
     return PressableCard(
       onTap: onTap,
       onLongPress: () => _confirmDelete(context),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          _MealThumbnail(meal: meal, color: typeColor, showHero: showHero),
+          _MealThumbnail(meal: meal, showHero: showHero),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -56,32 +36,41 @@ class MealCard extends StatelessWidget {
                   meal.mealName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: appTextPrimary,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${mealTypeEmoji(meal.consumedAt)} '
-                  '${meal.itemCount} item(s) · ${DateFormat('HH:mm').format(meal.consumedAt)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  '${meal.itemCount} ${meal.itemCount == 1 ? 'item' : 'itens'} · '
+                  '${DateFormat('HH:mm').format(meal.consumedAt)}',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: appTextSecondary,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '${meal.totalCalories}',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          Text(
-            ' kcal',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${meal.totalCalories}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: appTextPrimary,
+                ),
+              ),
+              const Text(
+                'kcal',
+                style: TextStyle(fontSize: 11, color: appTextSecondary),
+              ),
+            ],
           ),
         ],
       ),
@@ -111,15 +100,14 @@ class MealCard extends StatelessWidget {
 }
 
 class _MealThumbnail extends StatelessWidget {
-  final Meal meal;
-  final Color color;
+  final dynamic meal;
   final bool showHero;
 
-  const _MealThumbnail({required this.meal, required this.color, required this.showHero});
+  const _MealThumbnail({required this.meal, required this.showHero});
 
   @override
   Widget build(BuildContext context) {
-    final size = 58.0;
+    final size = 56.0;
     final image = SizedBox(
       width: size,
       height: size,
@@ -127,45 +115,21 @@ class _MealThumbnail extends StatelessWidget {
           ? Image.network(
               meal.imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _fallback(),
+              errorBuilder: (_, _, _) => _placeholder(),
             )
-          : _fallback(),
+          : _placeholder(),
     );
-    final clip = ClipRRect(borderRadius: BorderRadius.circular(14), child: image);
-    final withShadow = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.14),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: clip,
-    );
+    final clip = ClipRRect(borderRadius: BorderRadius.circular(12), child: image);
     return showHero
-        ? Hero(tag: 'meal-image-${meal.id}', child: withShadow)
-        : withShadow;
+        ? Hero(tag: 'meal-image-${meal.id}', child: clip)
+        : clip;
   }
 
-  Widget _fallback() {
+  Widget _placeholder() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color.withValues(alpha: 0.85), color.withValues(alpha: 0.55)],
-        ),
-      ),
+      color: appFill,
       alignment: Alignment.center,
-      child: Text(
-        mealTypeEmoji(meal.consumedAt),
-        style: const TextStyle(fontSize: 26),
-      ),
+      child: const Icon(Icons.restaurant, size: 22, color: appTextSecondary),
     );
   }
 }

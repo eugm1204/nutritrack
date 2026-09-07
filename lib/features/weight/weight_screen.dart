@@ -1,7 +1,8 @@
-import 'package:fl_chart/fl_chart.dart';
+﻿import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../core/theme.dart';
 
 import '../../models/weight_entry.dart';
 import '../../providers/providers.dart';
@@ -183,23 +184,26 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                     children: [
                                       Text(
                                         '${latest!.toStringAsFixed(1)} kg',
-                                        style: theme.textTheme.headlineMedium
-                                            ?.copyWith(fontWeight: FontWeight.w800),
+                                        style: const TextStyle(
+                                          fontSize: 34,
+                                          fontWeight: FontWeight.w700,
+                                          color: appTextPrimary,
+                                          letterSpacing: -0.8,
+                                        ),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 10),
                                       Icon(
                                         change <= 0
                                             ? Icons.trending_down
                                             : Icons.trending_up,
-                                        color: change <= 0
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.error,
+                                        color: change <= 0 ? appGreen : appRed,
                                         size: 20,
                                       ),
                                       Text(
                                         '${change.abs().toStringAsFixed(1)} kg',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: appTextSecondary,
                                         ),
                                       ),
                                     ],
@@ -284,16 +288,17 @@ class _WeightChart extends StatelessWidget {
             if (target != null)
               HorizontalLine(
                 y: target,
-                color: theme.colorScheme.tertiary.withValues(alpha: 0.7),
-                strokeWidth: 1.4,
-                dashArray: [6, 5],
+                color: appTextSecondary.withValues(alpha: 0.6),
+                strokeWidth: 1,
+                dashArray: [5, 5],
                 label: HorizontalLineLabel(
                   show: true,
                   alignment: Alignment.topRight,
                   labelResolver: (line) => 'alvo ${target.toStringAsFixed(0)}kg',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.tertiary,
-                    fontWeight: FontWeight.w800,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: appTextSecondary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -312,12 +317,12 @@ class _WeightChart extends StatelessWidget {
                 FlSpot(i.toDouble(), recent[i].weightKg),
             ],
             isCurved: true,
-            color: theme.colorScheme.primary,
+            color: appGreen,
             barWidth: 3,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              color: appGreen.withValues(alpha: 0.07),
             ),
           ),
         ],

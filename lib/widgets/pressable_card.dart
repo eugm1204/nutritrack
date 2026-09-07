@@ -24,9 +24,14 @@ class _PressableCardState extends State<PressableCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final child = Material(
-      color: Theme.of(context).colorScheme.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(20),
+      color: theme.colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: widget.onTap,
@@ -42,7 +47,7 @@ class _PressableCardState extends State<PressableCard> {
     if (widget.onTap == null && widget.onLongPress == null) return child;
 
     return AnimatedScale(
-      scale: _pressed ? 0.97 : 1.0,
+      scale: _pressed ? 0.985 : 1.0,
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
       child: GestureDetector(

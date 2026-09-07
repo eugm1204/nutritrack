@@ -1,137 +1,207 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const macroProteinColor = Color(0xFFE8590C);
-const macroCarbsColor = Color(0xFFE6A700);
-const macroFatColor = Color(0xFF7C4DFF);
+// Paleta Apple-inspired
+const appBackground = Color(0xFFFAFAF8);
+const appCard = Colors.white;
+const appHairline = Color(0xFFE5E5EA);
+const appTextPrimary = Color(0xFF1C1C1E);
+const appTextSecondary = Color(0xFF8E8E93);
+const appGreen = Color(0xFF34C759);
+const appOrange = Color(0xFFFF9500);
+const appRed = Color(0xFFFF3B30);
+const appWaterBlue = Color(0xFF32ADE6);
+const appFill = Color(0xFFF2F2F7);
 
-const primaryGradient = LinearGradient(
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
-);
-
-LinearGradient primaryGradientFor(Brightness brightness) {
-  if (brightness == Brightness.dark) {
-    return const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
-    );
-  }
-  return primaryGradient;
-}
-
-const morningColor = Color(0xFFF9A825);
-const lunchColor = Color(0xFF43A047);
-const dinnerColor = Color(0xFF8E24AA);
-const nightColor = Color(0xFF546E7A);
+// Macros em tons discretos
+const macroProteinColor = appOrange;
+const macroCarbsColor = appGreen;
+const macroFatColor = appTextSecondary;
 
 class AppTheme {
-  static const seed = Color(0xFF2E7D32);
-
   static ThemeData get light => _build(Brightness.light);
   static ThemeData get dark => _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
+    final isDark = brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF0F0F10) : appBackground;
+    final card = isDark ? const Color(0xFF1C1C1E) : appCard;
+    final hairline = isDark ? const Color(0xFF2C2C2E) : appHairline;
+    final text = isDark ? const Color(0xFFF2F2F7) : appTextPrimary;
+    final textSecondary = isDark ? const Color(0xFF98989D) : appTextSecondary;
+    final green = isDark ? const Color(0xFF30D158) : appGreen;
+
+    final scheme =
+        ColorScheme.fromSeed(seedColor: green, brightness: brightness).copyWith(
+      primary: green,
+      onPrimary: Colors.white,
+      error: isDark ? const Color(0xFFFF453A) : appRed,
+      surface: card,
+      onSurface: text,
+      onSurfaceVariant: textSecondary,
+      outlineVariant: hairline,
+      secondaryContainer: green.withValues(alpha: 0.12),
+    );
+
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
-    final textTheme = GoogleFonts.nunitoTextTheme(base.textTheme).copyWith(
-      displayLarge: GoogleFonts.nunito(
-        fontSize: 57,
-        fontWeight: FontWeight.w900,
-        color: scheme.onSurface,
+    final textTheme = GoogleFonts.interTextTheme(base.textTheme).copyWith(
+      displayLarge: GoogleFonts.inter(
+        fontSize: 34,
+        fontWeight: FontWeight.w700,
+        color: text,
+        height: 1.1,
+        letterSpacing: -0.5,
       ),
-      headlineMedium: GoogleFonts.nunito(
-        fontSize: 28,
-        fontWeight: FontWeight.w900,
-        color: scheme.onSurface,
+      headlineMedium: GoogleFonts.inter(
+        fontSize: 34,
+        fontWeight: FontWeight.w700,
+        color: text,
+        height: 1.15,
+        letterSpacing: -0.5,
       ),
-      headlineSmall: GoogleFonts.nunito(
-        fontSize: 24,
-        fontWeight: FontWeight.w800,
-        color: scheme.onSurface,
+      headlineSmall: GoogleFonts.inter(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        color: text,
       ),
-      titleLarge: GoogleFonts.nunito(
-        fontSize: 21,
-        fontWeight: FontWeight.w800,
-        color: scheme.onSurface,
+      titleLarge: GoogleFonts.inter(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: text,
       ),
-      titleMedium: GoogleFonts.nunito(
+      titleMedium: GoogleFonts.inter(
         fontSize: 17,
-        fontWeight: FontWeight.w800,
-        color: scheme.onSurface,
+        fontWeight: FontWeight.w600,
+        color: text,
       ),
-      bodyLarge: GoogleFonts.nunito(fontSize: 16, color: scheme.onSurface),
-      bodyMedium: GoogleFonts.nunito(fontSize: 14, color: scheme.onSurface),
-      bodySmall: GoogleFonts.nunito(
+      bodyLarge: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: text,
+        height: 1.4,
+      ),
+      bodyMedium: GoogleFonts.inter(
+        fontSize: 14.5,
+        fontWeight: FontWeight.w400,
+        color: text,
+        height: 1.4,
+      ),
+      bodySmall: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        color: textSecondary,
+        height: 1.35,
+      ),
+      labelLarge: GoogleFonts.inter(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: text,
+      ),
+      labelMedium: GoogleFonts.inter(
         fontSize: 12.5,
-        color: scheme.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+        color: textSecondary,
       ),
-      labelLarge: GoogleFonts.nunito(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurface,
-      ),
-      labelMedium: GoogleFonts.nunito(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurface,
+      labelSmall: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: textSecondary,
       ),
     );
 
-    final isDark = brightness == Brightness.dark;
-
     return base.copyWith(
-      scaffoldBackgroundColor: isDark ? const Color(0xFF0E120E) : const Color(0xFFF7F8F5),
+      scaffoldBackgroundColor: bg,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
+        backgroundColor: bg,
         elevation: 0,
         scrolledUnderElevation: 0,
+        centerTitle: false,
         titleTextStyle: textTheme.titleLarge,
+        iconTheme: IconThemeData(color: text),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        color: scheme.surfaceContainerLowest,
+        color: card,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: hairline),
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: green,
+          foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.nunito(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
+          textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: green,
+          minimumSize: const Size.fromHeight(52),
+          side: BorderSide(color: hairline),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         filled: true,
+        fillColor: isDark ? const Color(0xFF2C2C2E) : appFill,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: green, width: 1.5),
+        ),
+        labelStyle: GoogleFonts.inter(fontSize: 13.5, color: textSecondary),
+        hintStyle: GoogleFonts.inter(fontSize: 13.5, color: textSecondary),
       ),
       navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: card,
+        surfaceTintColor: Colors.transparent,
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        indicatorColor: scheme.primary.withValues(alpha: 0.15),
-        backgroundColor: isDark ? const Color(0xFF141A14) : scheme.surface,
-        surfaceTintColor: Colors.transparent,
-        labelTextStyle: WidgetStatePropertyAll(
-          GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700),
+        indicatorColor: green.withValues(alpha: 0.12),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected) ? green : textSecondary,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => GoogleFonts.inter(
+            fontSize: 11.5,
+            fontWeight:
+                states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
+            color: states.contains(WidgetState.selected) ? green : textSecondary,
+          ),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: isDark ? const Color(0xFF141A14) : scheme.surface,
+        backgroundColor: card,
+        surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
       ),
-      dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withValues(alpha: 0.4),
-      ),
+      dividerTheme: DividerThemeData(color: hairline, thickness: 1, space: 1),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: card,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: green),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: appGreen,
+        foregroundColor: Colors.white,
       ),
     );
   }
