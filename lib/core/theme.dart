@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+
 // Paleta Apple-inspired
 const appBackground = Color(0xFFFAFAF8);
 const appCard = Colors.white;

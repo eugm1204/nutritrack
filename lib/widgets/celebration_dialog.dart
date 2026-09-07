@@ -1,4 +1,4 @@
-import 'package:confetti/confetti.dart';
+﻿import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
@@ -34,6 +34,7 @@ class _CelebrationDialogState extends State<CelebrationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
       child: Stack(
         alignment: Alignment.center,
@@ -45,7 +46,7 @@ class _CelebrationDialogState extends State<CelebrationDialog> {
                 blastDirectionality: BlastDirectionality.explosive,
                 numberOfParticles: 40,
                 gravity: 0.25,
-                colors: const [appGreen, appOrange, appTextSecondary],
+                colors: [appGreen, appOrange, theme.colorScheme.onSurfaceVariant],
               ),
             ),
           ),
@@ -54,14 +55,14 @@ class _CelebrationDialogState extends State<CelebrationDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('🎉', style: TextStyle(fontSize: 44)),
+                Text('🎉', style: TextStyle(fontSize: 44)),
                 const SizedBox(height: 14),
-                const Text(
+                Text(
                   'Meta dentro do alvo',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -69,12 +70,12 @@ class _CelebrationDialogState extends State<CelebrationDialog> {
                 Text(
                   '${widget.consumedCalories} de ${widget.goalCalories} kcal — bom trabalho.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, color: appTextSecondary),
+                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Continuar'),
+                  child: Text('Continuar'),
                 ),
               ],
             ),

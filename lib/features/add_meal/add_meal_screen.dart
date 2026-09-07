@@ -40,12 +40,12 @@ class _AddMealScreenState extends ConsumerState<AddMealScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
     final state = ref.watch(addMealControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar refeição'),
+        title: Text('Adicionar refeição'),
         automaticallyImplyLeading: state.step != AddMealStep.pick,
       ),
       body: switch (state.step) {
@@ -72,59 +72,60 @@ class _PickView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.restaurant, size: 52, color: appTextSecondary),
+          Icon(Icons.restaurant, size: 52, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Tira uma foto ao teu prato',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: appTextPrimary,
+              color: theme.colorScheme.onSurface,
               letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'A IA estima as calorias, macros e porções.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: appTextSecondary),
+            style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
           ),
           if (error != null) ...[
             const SizedBox(height: 16),
             Text(
               error!,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13.5, color: appRed),
+              style: TextStyle(fontSize: 13.5, color: appRed),
             ),
             const SizedBox(height: 4),
             TextButton(
               onPressed: () => context.push('/manual-add'),
-              child: const Text('Adicionar manualmente'),
+              child: Text('Adicionar manualmente'),
             ),
           ],
           const SizedBox(height: 32),
           FilledButton.icon(
             onPressed: onCamera,
-            icon: const Icon(Icons.photo_camera_outlined, size: 20),
-            label: const Text('Tirar foto'),
+            icon: Icon(Icons.photo_camera_outlined, size: 20),
+            label: Text('Tirar foto'),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: onGallery,
-            icon: const Icon(Icons.photo_library_outlined, size: 20),
-            label: const Text('Escolher da galeria'),
+            icon: Icon(Icons.photo_library_outlined, size: 20),
+            label: Text('Escolher da galeria'),
           ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => context.push('/manual-add'),
-            child: const Text('Adicionar sem foto'),
+            child: Text('Adicionar sem foto'),
           ),
         ],
       ),
@@ -135,9 +136,10 @@ class _PickView extends StatelessWidget {
 class _AnalyzingView extends StatelessWidget {
   const _AnalyzingView();
 
-  @override
+@override
   Widget build(BuildContext context) {
-    return const Center(
+    final theme = Theme.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -145,12 +147,12 @@ class _AnalyzingView extends StatelessWidget {
           SizedBox(height: 20),
           Text(
             'A analisar a tua foto...',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: appTextPrimary),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
           ),
           SizedBox(height: 6),
           Text(
             'Isto pode demorar alguns segundos',
-            style: TextStyle(fontSize: 13, color: appTextSecondary),
+            style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -186,6 +188,7 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final state = ref.watch(addMealControllerProvider);
     final controller = ref.read(addMealControllerProvider.notifier);
 
@@ -205,8 +208,8 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Container(
                       height: 240,
-                      color: appFill,
-                      child: const Icon(Icons.image_outlined, size: 48, color: appTextSecondary),
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Icon(Icons.image_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ),
                   Positioned(
@@ -221,7 +224,7 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
             TextField(
               controller: _nameController,
               onChanged: controller.updateMealName,
-              style: const TextStyle(fontSize: 15, color: appTextPrimary),
+              style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 labelText: 'Nome da refeição',
                 prefixIcon: Icon(Icons.label_outline, size: 18),
@@ -230,7 +233,7 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
             const SizedBox(height: 8),
             Text(
               'Hoje · ${DateFormat('HH:mm', 'pt_PT').format(DateTime.now())}',
-              style: const TextStyle(fontSize: 12.5, color: appTextSecondary),
+              style: TextStyle(fontSize: 12.5, color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 14),
             Row(
@@ -239,26 +242,26 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
               children: [
                 CountUpText(
                   target: state.totalCalories,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                     letterSpacing: -0.8,
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Text(
+                Text(
                   'kcal estimadas',
-                  style: TextStyle(fontSize: 14, color: appTextSecondary),
+                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             _MacroSummary(state: state),
             const SizedBox(height: 18),
-            const Text(
+            Text(
               'Alimentos',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: appTextPrimary),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
             ),
             const SizedBox(height: 8),
             for (var i = 0; i < state.items.length; i++)
@@ -286,9 +289,9 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                             ),
                             if ((state.items[i].confidence ?? 1) < 0.6) ...[
                               const SizedBox(width: 10),
-                              const Icon(Icons.circle, size: 6, color: appOrange),
+                              Icon(Icons.circle, size: 6, color: appOrange),
                               const SizedBox(width: 4),
-                              const Text(
+                              Text(
                                 'confirma a porção',
                                 style: TextStyle(fontSize: 11.5, color: appOrange),
                               ),
@@ -303,54 +306,54 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: appCard,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: appHairline),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'Resumo',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: appTextPrimary,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const Spacer(),
                       Text(
                         'Detetados ${state.items.length} '
                         '${state.items.length == 1 ? 'item' : 'itens'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: appTextSecondary,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Divider(color: appHairline, height: 1),
+                  Divider(color: theme.colorScheme.outlineVariant, height: 1),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Total',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: appTextPrimary,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       Text(
                         '${state.totalCalories} kcal',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: appTextPrimary,
+                          color: theme.colorScheme.onSurface,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -360,17 +363,17 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Estimativa por IA — podes corrigir qualquer valor.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: appTextSecondary),
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
             ),
             if (state.error != null) ...[
               const SizedBox(height: 8),
               Text(
                 state.error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13.5, color: appRed),
+                style: TextStyle(fontSize: 13.5, color: appRed),
               ),
             ],
           ],
@@ -395,7 +398,7 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Icon(Icons.check, size: 20),
+                : Icon(Icons.check, size: 20),
             label: Text(widget.saving ? 'A guardar...' : 'Guardar refeição'),
           ),
         ),
@@ -410,7 +413,7 @@ class _MacroSummary extends StatelessWidget {
   const _MacroSummary({required this.state});
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
     double sum(double? Function(dynamic item) extract) => state.items.fold<double>(
         0, (a, item) => a + (extract(item) ?? 0));
 
@@ -435,13 +438,14 @@ class _MacroStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: appCard,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: appHairline),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
         child: Column(
           children: [
@@ -456,7 +460,7 @@ class _MacroStat extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: appTextSecondary),
+              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -470,7 +474,7 @@ class _PhotoOverlayChip extends StatelessWidget {
   const _PhotoOverlayChip({required this.state});
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
     double sum(double? Function(dynamic item) extract) => state.items.fold<double>(
         0, (a, item) => a + (extract(item) ?? 0));
     final protein = sum((item) => item.protein);
@@ -488,7 +492,7 @@ class _PhotoOverlayChip extends StatelessWidget {
         children: [
           Text(
             ' kcal',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -518,7 +522,7 @@ class _PhotoOverlayChip extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           'g',
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white70,
             fontSize: 11,
             fontWeight: FontWeight.w600,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../models/meal_item.dart';
 import 'portion_stepper.dart';
@@ -30,7 +30,7 @@ class PortionControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final grams = item.grams;
+        final grams = item.grams;
     final portionRef = item.portionRef;
 
     return Padding(

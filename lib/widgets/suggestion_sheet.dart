@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
@@ -118,7 +118,7 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return DraggableScrollableSheet(
+        return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.75,
       maxChildSize: 0.95,
@@ -132,7 +132,7 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: appHairline,
+                  color: theme.colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -142,7 +142,7 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
             const SizedBox(height: 4),
             Text(
               'Tens ${widget.remainingKcal} kcal restantes — 3 ideias para ti',
-              style: const TextStyle(fontSize: 13.5, color: appTextSecondary),
+              style: TextStyle(fontSize: 13.5, color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -156,12 +156,12 @@ class _SuggestionSheetState extends ConsumerState<SuggestionSheet> {
                               Text(
                                 _error!,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 13.5, color: appRed),
+                                style: TextStyle(fontSize: 13.5, color: appRed),
                               ),
                               const SizedBox(height: 12),
                               OutlinedButton(
                                 onPressed: _load,
-                                child: const Text('Tentar de novo'),
+                                child: Text('Tentar de novo'),
                               ),
                             ],
                           ),
@@ -201,14 +201,15 @@ class _SuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final kcal = suggestion.calories;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: appCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appHairline),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,16 +219,16 @@ class _SuggestionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   suggestion.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ),
               Text(
                 '$kcal kcal',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: appGreen,
@@ -238,7 +239,7 @@ class _SuggestionCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             suggestion.description,
-            style: const TextStyle(fontSize: 13, color: appTextSecondary, height: 1.35),
+            style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant, height: 1.35),
           ),
           const SizedBox(height: 10),
           Row(
@@ -249,7 +250,7 @@ class _SuggestionCard extends StatelessWidget {
                   children: [
                     Text(
                       'P ${(suggestion.protein ?? 0).toStringAsFixed(0)}g',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: macroProteinColor,
@@ -257,7 +258,7 @@ class _SuggestionCard extends StatelessWidget {
                     ),
                     Text(
                       'H ${(suggestion.carbs ?? 0).toStringAsFixed(0)}g',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: macroCarbsColor,
@@ -265,7 +266,7 @@ class _SuggestionCard extends StatelessWidget {
                     ),
                     Text(
                       'G ${(suggestion.fat ?? 0).toStringAsFixed(0)}g',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: macroFatColor,
@@ -289,7 +290,7 @@ class _SuggestionCard extends StatelessWidget {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Registar'),
+                    : Text('Registar'),
               ),
             ],
           ),

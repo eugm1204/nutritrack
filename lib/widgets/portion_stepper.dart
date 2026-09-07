@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-import '../../core/theme.dart';
 
 class PortionStepper extends StatelessWidget {
   final double multiplier;
@@ -28,6 +27,7 @@ class PortionStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -39,10 +39,10 @@ class PortionStepper extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             _label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: appTextPrimary,
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ),
@@ -63,8 +63,9 @@ class _Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Material(
-      color: appFill,
+      color: theme.colorScheme.surfaceContainerHighest,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -76,8 +77,8 @@ class _Button extends StatelessWidget {
             icon,
             size: 16,
             color: onTap == null
-                ? appTextSecondary.withValues(alpha: 0.35)
-                : appTextPrimary,
+                ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35)
+                : theme.colorScheme.onSurface,
           ),
         ),
       ),

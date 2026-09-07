@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -30,6 +30,7 @@ class _SplashGateState extends State<SplashGate> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (_done) return widget.child;
 
     return AnimatedOpacity(
@@ -60,7 +61,7 @@ class _SplashGateState extends State<SplashGate> {
                     borderRadius: BorderRadius.circular(24),
                   ),
                   alignment: Alignment.center,
-                  child: const Icon(
+                  child: Icon(
                     Icons.restaurant,
                     color: Colors.white,
                     size: 44,
@@ -79,10 +80,10 @@ class _SplashGateState extends State<SplashGate> {
                     child: child,
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'NutriTrack',
                   style: TextStyle(
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.4,

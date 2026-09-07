@@ -122,7 +122,7 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return DraggableScrollableSheet(
+        return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.75,
       maxChildSize: 0.95,
@@ -136,7 +136,7 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: appHairline,
+                  color: theme.colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -144,9 +144,9 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
             const SizedBox(height: 16),
             Text('O teu coach semanal', style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Análise dos últimos 7 dias',
-              style: TextStyle(fontSize: 13.5, color: appTextSecondary),
+              style: TextStyle(fontSize: 13.5, color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -160,12 +160,12 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                               Text(
                                 _error!,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 13.5, color: appRed),
+                                style: TextStyle(fontSize: 13.5, color: appRed),
                               ),
                               const SizedBox(height: 12),
                               OutlinedButton(
                                 onPressed: _load,
-                                child: const Text('Tentar de novo'),
+                                child: Text('Tentar de novo'),
                               ),
                             ],
                           ),
@@ -185,14 +185,14 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.psychology_outlined,
+                                  Icon(Icons.psychology_outlined,
                                       size: 22, color: appGreen),
                                   const SizedBox(height: 10),
                                   Text(
                                     _response!.summary,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14.5,
-                                      color: appTextPrimary,
+                                      color: theme.colorScheme.onSurface,
                                       height: 1.45,
                                     ),
                                   ),
@@ -208,15 +208,15 @@ class _CoachSheetState extends ConsumerState<CoachSheet> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.check_circle,
+                                    Icon(Icons.check_circle,
                                         size: 16, color: appGreen),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         tip,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
-                                          color: appTextPrimary,
+                                          color: theme.colorScheme.onSurface,
                                           height: 1.4,
                                         ),
                                       ),

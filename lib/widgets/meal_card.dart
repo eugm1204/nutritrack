@@ -1,9 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../core/theme.dart';
 
 import 'pressable_card.dart';
-
 class MealCard extends StatelessWidget {
   final dynamic meal;
   final VoidCallback onTap;
@@ -20,6 +18,7 @@ class MealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return PressableCard(
       onTap: onTap,
       onLongPress: () => _confirmDelete(context),
@@ -36,19 +35,19 @@ class MealCard extends StatelessWidget {
                   meal.mealName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${meal.itemCount} ${meal.itemCount == 1 ? 'item' : 'itens'} · '
                   '${DateFormat('HH:mm', 'pt_PT').format(meal.consumedAt)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
-                    color: appTextSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -60,16 +59,16 @@ class MealCard extends StatelessWidget {
             children: [
               Text(
                 '${meal.totalCalories}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
-                  color: appTextPrimary,
+                  color: theme.colorScheme.onSurface,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
-              const Text(
+              Text(
                 'kcal',
-                style: TextStyle(fontSize: 11, color: appTextSecondary),
+                style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -82,16 +81,16 @@ class MealCard extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar refeição'),
-        content: const Text('Tens a certeza que queres apagar esta refeição?'),
+        title: Text('Apagar refeição'),
+        content: Text('Tens a certeza que queres apagar esta refeição?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Apagar'),
+            child: Text('Apagar'),
           ),
         ],
       ),
@@ -106,7 +105,7 @@ class _MealThumbnail extends StatelessWidget {
 
   const _MealThumbnail({required this.meal, required this.showHero});
 
-  @override
+@override
   Widget build(BuildContext context) {
     final size = 64.0;
     final image = SizedBox(
@@ -116,9 +115,9 @@ class _MealThumbnail extends StatelessWidget {
           ? Image.network(
               meal.imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _placeholder(),
+              errorBuilder: (_, _, _) => _placeholder(context),
             )
-          : _placeholder(),
+          : _placeholder(context),
     );
     final clip = ClipRRect(borderRadius: BorderRadius.circular(12), child: image);
     return showHero
@@ -126,11 +125,12 @@ class _MealThumbnail extends StatelessWidget {
         : clip;
   }
 
-  Widget _placeholder() {
+Widget _placeholder(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      color: appFill,
+      color: theme.colorScheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: const Icon(Icons.restaurant, size: 22, color: appTextSecondary),
+      child: Icon(Icons.restaurant, size: 22, color: theme.colorScheme.onSurfaceVariant),
     );
   }
 }

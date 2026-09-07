@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
@@ -47,6 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final loading = ref.watch(authControllerProvider).loading;
 
     return Scaffold(
@@ -68,20 +69,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(
+                    child: Icon(
                       Icons.restaurant,
                       size: 44,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'NutriTrack',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: appTextPrimary,
+                      color: theme.colorScheme.onSurface,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -91,9 +92,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? 'Cria a tua conta para começar'
                         : 'Entra para registar as tuas refeições',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: appTextSecondary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -113,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
                       labelText: 'Senha',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                         onPressed: () => setState(() => _obscure = !_obscure),

@@ -58,7 +58,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Registar peso'),
+          title: Text('Registar peso'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -75,7 +75,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(DateFormat('d MMM yyyy', 'pt_PT').format(date)),
-                leading: const Icon(Icons.calendar_today_outlined),
+                leading: Icon(Icons.calendar_today_outlined),
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
@@ -91,11 +91,11 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
+              child: Text('Cancelar'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Guardar'),
+              child: Text('Guardar'),
             ),
           ],
         ),
@@ -128,17 +128,17 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar medição'),
+        title: Text('Apagar medição'),
         content: Text('${entry.weightKg.toStringAsFixed(1)} kg de '
             '${DateFormat('d MMM', 'pt_PT').format(entry.recordedAt)}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Apagar'),
+            child: Text('Apagar'),
           ),
         ],
       ),
@@ -152,16 +152,16 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final latest = _entries.isNotEmpty ? _entries.last.weightKg : null;
+        final latest = _entries.isNotEmpty ? _entries.last.weightKg : null;
     final first = _entries.isNotEmpty ? _entries.first.weightKg : null;
     final change = (latest != null && first != null) ? latest - first : 0.0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Peso')),
+      appBar: AppBar(title: Text('Peso')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addEntry,
-        icon: const Icon(Icons.add),
-        label: const Text('Registar peso'),
+        icon: Icon(Icons.add),
+        label: Text('Registar peso'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -182,10 +182,10 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.monitor_weight_outlined,
+                                      Icon(Icons.monitor_weight_outlined,
                                           size: 18, color: appGreen),
                                       const SizedBox(width: 8),
-                                      const Text(
+                                      Text(
                                         'Peso',
                                         style: TextStyle(
                                           fontSize: 17,
@@ -201,15 +201,15 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                             vertical: 5,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: appFill,
+                                            color: theme.colorScheme.surfaceContainerHighest,
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                           child: Text(
                                             'Meta ${_targetWeight!.toStringAsFixed(0)} kg',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: appTextPrimary,
+                                              color: theme.colorScheme.onSurface,
                                             ),
                                           ),
                                         ),
@@ -220,10 +220,10 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                     children: [
                                       Text(
                                         '${latest!.toStringAsFixed(1)} kg',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 34,
                                           fontWeight: FontWeight.w700,
-                                          color: appTextPrimary,
+                                          color: theme.colorScheme.onSurface,
                                           letterSpacing: -0.8,
                                           fontFeatures: [FontFeature.tabularFigures()],
                                         ),
@@ -241,9 +241,9 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                           change == 0
                                               ? 'sem mudança'
                                               : '${change.abs().toStringAsFixed(1)} kg',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 13,
-                                            color: appTextSecondary,
+                                            color: theme.colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ],
@@ -273,10 +273,10 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               child: ListTile(
                                 dense: true,
-                                leading: const Icon(Icons.monitor_weight_outlined),
+                                leading: Icon(Icons.monitor_weight_outlined),
                                 title: Text(
                                   '${entry.weightKg.toStringAsFixed(1)} kg',
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 subtitle: Text(
                                   DateFormat('EEEE, d MMM yyyy', 'pt_PT').format(entry.recordedAt),
@@ -301,7 +301,7 @@ class _WeightChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final recent = entries.length > 30 ? entries.sublist(entries.length - 30) : entries;
+        final recent = entries.length > 30 ? entries.sublist(entries.length - 30) : entries;
 
     var minW = recent.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
     var maxW = recent.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
@@ -336,16 +336,16 @@ class _WeightChart extends StatelessWidget {
             if (target != null)
               HorizontalLine(
                 y: target,
-                color: appTextSecondary.withValues(alpha: 0.6),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 strokeWidth: 1,
                 dashArray: [5, 5],
                 label: HorizontalLineLabel(
                   show: true,
                   alignment: Alignment.topRight,
                   labelResolver: (line) => 'alvo ${target.toStringAsFixed(0)}kg',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10.5,
-                    color: appTextSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -373,7 +373,7 @@ class _WeightChart extends StatelessWidget {
                     getDotPainter: (spot, percent, barData, index) =>
                         FlDotCirclePainter(
                       radius: 3,
-                      color: appCard,
+                      color: theme.colorScheme.surface,
                       strokeWidth: 2,
                       strokeColor: appGreen,
                     ),
@@ -396,7 +396,7 @@ class _EmptyWeight extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
+        return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

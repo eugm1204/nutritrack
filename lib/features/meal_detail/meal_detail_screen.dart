@@ -138,16 +138,16 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apagar refeição'),
-        content: const Text('Tens a certeza que queres apagar esta refeição?'),
+        title: Text('Apagar refeição'),
+        content: Text('Tens a certeza que queres apagar esta refeição?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Apagar'),
+            child: Text('Apagar'),
           ),
         ],
       ),
@@ -162,10 +162,10 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes da refeição'),
+        title: Text('Detalhes da refeição'),
         actions: [
           IconButton(
             icon: Icon(
@@ -208,7 +208,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                       errorBuilder: (_, _, _) => Container(
                         height: 180,
                         color: theme.colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.image_outlined, size: 48),
+                        child: Icon(Icons.image_outlined, size: 48),
                       ),
                     ),
                   ),
@@ -319,7 +319,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.check),
+                        : Icon(Icons.check),
                     label: Text(_saving ? 'A guardar...' : 'Guardar'),
                   ),
                 ),
@@ -333,7 +333,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.copy_outlined),
+                      : Icon(Icons.copy_outlined),
                 ),
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
@@ -342,7 +342,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                   style: IconButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                   ),
-                  icon: const Icon(Icons.delete_outline),
+                  icon: Icon(Icons.delete_outline),
                 ),
               ],
             ),
@@ -363,7 +363,7 @@ class _MacroRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Wrap(
+        return Wrap(
       spacing: 16,
       runSpacing: 6,
       children: [

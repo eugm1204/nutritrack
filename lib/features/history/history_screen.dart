@@ -23,9 +23,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final history = ref.watch(historyControllerProvider);
     final theme = Theme.of(context);
-
+    final history = ref.watch(historyControllerProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -93,7 +93,7 @@ class _InsightsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final change = insights.changePercent;
+        final change = insights.changePercent;
     final hasPrevious = insights.previousWeekKcal != null;
 
 return PressableCard(
@@ -106,15 +106,15 @@ return PressableCard(
           Text(
             'Registaste refeições em ${insights.daysLogged} de 7 dias, '
             'com média de ${insights.avgKcalPerDay} kcal.',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w600,
-              color: appTextPrimary,
+              color: theme.colorScheme.onSurface,
               height: 1.4,
             ),
           ),
           const SizedBox(height: 14),
-          Divider(color: appHairline, height: 1),
+          Divider(color: theme.colorScheme.outlineVariant, height: 1),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -130,7 +130,7 @@ return PressableCard(
               Expanded(
                 child: _InsightTile(
                   icon: Icons.calendar_view_day_outlined,
-                  iconColor: appTextSecondary,
+                  iconColor: theme.colorScheme.onSurfaceVariant,
                   label: 'Dias registados',
                   value: '${insights.daysLogged}/7',
                 ),
@@ -154,7 +154,7 @@ return PressableCard(
               Expanded(
                 child: _InsightTile(
                   icon: Icons.thumb_down_alt_outlined,
-                  iconColor: appTextSecondary,
+                  iconColor: theme.colorScheme.onSurfaceVariant,
                   label: 'Menos equilibrado',
                   value: insights.worstDay != null
                       ? '${_dayShort(insights.worstDay!)} · ${insights.worstDayKcal} kcal'
@@ -172,7 +172,7 @@ return PressableCard(
                       ? Icons.trending_down
                       : Icons.trending_up,
                   size: 16,
-                  color: change != null && change <= 0 ? appGreen : appTextSecondary,
+                  color: change != null && change <= 0 ? appGreen : theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -185,7 +185,7 @@ return PressableCard(
                       fontWeight: FontWeight.w600,
                       color: change != null && change <= 0
                           ? appGreen
-                          : appTextSecondary,
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -197,8 +197,8 @@ return PressableCard(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: onCoach,
-              icon: const Icon(Icons.psychology_outlined, size: 18),
-              label: const Text('Resumo do coach'),
+              icon: Icon(Icons.psychology_outlined, size: 18),
+              label: Text('Resumo do coach'),
             ),
           ),
         ],
@@ -235,10 +235,11 @@ class _InsightTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: appFill.withValues(alpha: 0.6),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -253,9 +254,9 @@ class _InsightTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: appTextSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -263,10 +264,10 @@ class _InsightTile extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -297,6 +298,7 @@ class _DayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final total = meals.fold<int>(0, (sum, meal) => sum + meal.totalCalories);
     final now = DateTime.now();
     final isToday = now.year == day.year && now.month == day.month && now.day == day.day;
@@ -322,7 +324,7 @@ class _DayCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isToday ? appGreen.withValues(alpha: 0.12) : appFill,
+                  color: isToday ? appGreen.withValues(alpha: 0.12) : theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -330,7 +332,7 @@ class _DayCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    color: isToday ? appGreen : appTextPrimary,
+                    color: isToday ? appGreen : theme.colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -338,28 +340,28 @@ class _DayCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   DateFormat('d MMM', 'pt_PT').format(day),
-                  style: const TextStyle(fontSize: 14, color: appTextSecondary),
+                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
               _PhotoStack(meals: meals),
               const SizedBox(width: 8),
               Text(
                 '$total',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: appTextPrimary,
+                  color: theme.colorScheme.onSurface,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
-              const Text(
+              Text(
                 ' kcal',
-                style: TextStyle(fontSize: 11.5, color: appTextSecondary),
+                style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(width: 4),
               Icon(
                 expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: appTextSecondary,
+                color: theme.colorScheme.onSurfaceVariant,
                 size: 20,
               ),
             ],
@@ -371,7 +373,7 @@ class _DayCard extends StatelessWidget {
               value: progress,
               minHeight: 5,
               color: total > goalCalories ? appOrange : appGreen,
-              backgroundColor: appFill,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           ),
           if (expanded) ...[
@@ -396,20 +398,21 @@ class _DayCard extends StatelessWidget {
 class _EmptyHistory extends StatelessWidget {
   const _EmptyHistory();
 
-  @override
+@override
   Widget build(BuildContext context) {
-    return const Center(
+    final theme = Theme.of(context);
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_today_outlined, size: 32, color: appTextSecondary),
+            Icon(Icons.calendar_today_outlined, size: 32, color: theme.colorScheme.onSurfaceVariant),
             SizedBox(height: 10),
             Text(
               'Ainda não tens registos.\nAdiciona a tua primeira refeição!',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13.5, color: appTextSecondary, height: 1.4),
+              style: TextStyle(fontSize: 13.5, color: theme.colorScheme.onSurfaceVariant, height: 1.4),
             ),
           ],
         ),
@@ -424,6 +427,7 @@ class _PhotoStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final photos = meals.where((m) => m.imageUrl != null).take(3).toList();
 
     return SizedBox(
@@ -439,18 +443,18 @@ class _PhotoStack extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: appFill,
+                  color: theme.colorScheme.surfaceContainerHighest,
                   shape: BoxShape.circle,
-                  border: Border.all(color: appCard, width: 1.5),
+                  border: Border.all(color: theme.colorScheme.surface, width: 1.5),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Image.network(
                   photos[i].imageUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const Icon(
+                  errorBuilder: (_, _, _) => Icon(
                     Icons.restaurant,
                     size: 13,
-                    color: appTextSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -460,13 +464,13 @@ class _PhotoStack extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: appFill,
+                color: theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.restaurant,
                 size: 13,
-                color: appTextSecondary,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
         ],

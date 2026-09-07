@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-import '../../core/theme.dart';
 import '../../models/meal_item.dart';
 
 class EditableItemTile extends StatefulWidget {
@@ -46,12 +45,13 @@ class _EditableItemTileState extends State<EditableItemTile> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: appCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: appHairline),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -60,7 +60,7 @@ class _EditableItemTileState extends State<EditableItemTile> {
             child: TextField(
               controller: _nameController,
               onChanged: (_) => _emit(),
-              style: const TextStyle(fontSize: 14.5, color: appTextPrimary),
+              style: TextStyle(fontSize: 14.5, color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 isDense: true,
                 labelText: 'Alimento',
@@ -79,7 +79,7 @@ class _EditableItemTileState extends State<EditableItemTile> {
               keyboardType: TextInputType.number,
               onChanged: (_) => _emit(),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 14.5, color: appTextPrimary),
+              style: TextStyle(fontSize: 14.5, color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 isDense: true,
                 labelText: 'kcal',
@@ -92,7 +92,7 @@ class _EditableItemTileState extends State<EditableItemTile> {
           ),
           IconButton(
             onPressed: widget.onRemove,
-            icon: const Icon(Icons.close, size: 18, color: appTextSecondary),
+            icon: Icon(Icons.close, size: 18, color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),

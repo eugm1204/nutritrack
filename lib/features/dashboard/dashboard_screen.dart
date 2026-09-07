@@ -13,7 +13,6 @@ import '../../widgets/celebration_dialog.dart';
 import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/suggestion_sheet.dart';
-import '../auth/auth_controller.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'dashboard_controller.dart';
 
@@ -21,7 +20,7 @@ class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(dashboardControllerProvider);
 
     return Scaffold(
@@ -44,8 +43,6 @@ class DashboardScreen extends ConsumerWidget {
                     avatarUrl: state.avatarUrl,
                     streakDays: state.streakDays,
                     onSettings: () => context.push('/settings'),
-                    onLogout: () =>
-                        ref.read(authControllerProvider.notifier).signOut(),
                   ),
                   const SizedBox(height: 20),
                   _CalorieCard(
@@ -55,8 +52,8 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: () => context.push('/capture'),
-                    icon: const Icon(Icons.photo_camera_outlined, size: 20),
-                    label: const Text('Analisar refeição'),
+                    icon: Icon(Icons.photo_camera_outlined, size: 20),
+                    label: Text('Analisar refeição'),
                   ),
                   if (state.remainingCalories >= 200) ...[
                     const SizedBox(height: 2),
@@ -64,8 +61,8 @@ class DashboardScreen extends ConsumerWidget {
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
                         onPressed: () => _openSuggestions(context, ref, state),
-                        icon: const Icon(Icons.lightbulb_outline, size: 16),
-                        label: const Text('O que comer?'),
+                        icon: Icon(Icons.lightbulb_outline, size: 16),
+                        label: Text('O que comer?'),
                         style: TextButton.styleFrom(
                           foregroundColor: appGreen,
                           padding: const EdgeInsets.symmetric(
@@ -115,11 +112,12 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _mealGroups(
+List<Widget> _mealGroups(
     List<dynamic> meals,
     BuildContext context,
     WidgetRef ref,
   ) {
+    final theme = Theme.of(context);
     final mealsByPart = <String, List<dynamic>>{
       'Manhã': [],
       'Tarde': [],
@@ -139,10 +137,10 @@ class DashboardScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(top: 8, bottom: 6),
         child: Text(
           entry.key,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: appTextSecondary,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ));
@@ -185,18 +183,17 @@ class _GreetingHeader extends StatelessWidget {
   final String? avatarUrl;
   final int streakDays;
   final VoidCallback onSettings;
-  final VoidCallback onLogout;
 
   const _GreetingHeader({
     required this.name,
     required this.avatarUrl,
     required this.streakDays,
     required this.onSettings,
-    required this.onLogout,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final trimmed = name?.trim() ?? '';
     final firstName = trimmed.isEmpty
         ? ''
@@ -212,10 +209,10 @@ class _GreetingHeader extends StatelessWidget {
             children: [
               Text.rich(
                 TextSpan(
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                     letterSpacing: -0.3,
                   ),
                   children: [
@@ -223,7 +220,7 @@ class _GreetingHeader extends StatelessWidget {
                     if (display.isNotEmpty)
                       TextSpan(
                         text: ' $display',
-                        style: const TextStyle(color: appTextSecondary),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                   ],
                 ),
@@ -233,7 +230,7 @@ class _GreetingHeader extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 DateFormat('EEEE, d MMM', 'pt_PT').format(DateTime.now()),
-                style: const TextStyle(fontSize: 13, color: appTextSecondary),
+                style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -242,35 +239,30 @@ class _GreetingHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: appFill,
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '🔥 $streakDays',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: appTextPrimary,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ),
         const SizedBox(width: 8),
         Container(
           decoration: BoxDecoration(
-            color: appCard,
+            color: theme.colorScheme.surface,
             shape: BoxShape.circle,
-            border: Border.all(color: appHairline),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
           child: _HeaderAvatar(
             avatarUrl: avatarUrl,
             name: name,
             onTap: onSettings,
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.logout, size: 20, color: appTextSecondary),
-          tooltip: 'Terminar sessão',
-          onPressed: onLogout,
         ),
       ],
     );
@@ -290,6 +282,7 @@ class _HeaderAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final avatarUrl = this.avatarUrl;
     final initial = name != null && name!.trim().isNotEmpty
         ? name!.trim()[0].toUpperCase()
@@ -303,7 +296,7 @@ class _HeaderAvatar extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: appFill,
+          color: theme.colorScheme.surfaceContainerHighest,
         ),
         alignment: Alignment.center,
         child: avatarUrl != null
@@ -316,7 +309,7 @@ class _HeaderAvatar extends StatelessWidget {
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, progress) => progress == null
                         ? child
-                        : Container(color: appFill),
+                        : Container(color: theme.colorScheme.surfaceContainerHighest),
                     errorBuilder: (_, _, _) => _InitialText(initial: initial),
                   ),
                 ),
@@ -334,10 +327,11 @@ class _InitialText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Text(
       initial,
-      style: const TextStyle(
-        color: appTextPrimary,
+      style: TextStyle(
+        color: theme.colorScheme.onSurface,
         fontWeight: FontWeight.w600,
         fontSize: 15,
       ),
@@ -352,12 +346,13 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w700,
-        color: appTextPrimary,
+        color: theme.colorScheme.onSurface,
         letterSpacing: -0.4,
       ),
     );
@@ -372,14 +367,15 @@ class _CalorieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final remaining = state.remainingCalories;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: appCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appHairline),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,9 +387,9 @@ class _CalorieCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
                 children: [
-                  const Icon(Icons.restaurant, size: 18, color: appGreen),
+                  Icon(Icons.restaurant, size: 18, color: appGreen),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Calorias',
                     style: TextStyle(
                       fontSize: 17,
@@ -402,7 +398,7 @@ class _CalorieCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  const Icon(Icons.chevron_right, size: 20, color: appTextSecondary),
+                  Icon(Icons.chevron_right, size: 20, color: theme.colorScheme.onSurfaceVariant),
                 ],
               ),
             ),
@@ -413,10 +409,10 @@ class _CalorieCard extends StatelessWidget {
             children: [
               CountUpText(
                 target: remaining < 0 ? 0 : remaining,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w700,
-                  color: appTextPrimary,
+                  color: theme.colorScheme.onSurface,
                   letterSpacing: -0.8,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
@@ -426,7 +422,7 @@ class _CalorieCard extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   remaining >= 0 ? 'kcal restantes' : 'acima da meta',
-                  style: const TextStyle(fontSize: 13, color: appTextSecondary),
+                  style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
               const Spacer(),
@@ -438,9 +434,9 @@ class _CalorieCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             _motivation(remaining: remaining, progress: state.progress),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: appTextSecondary,
+              color: theme.colorScheme.onSurfaceVariant,
               height: 1.35,
             ),
           ),
@@ -473,6 +469,7 @@ class _Sparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -500,7 +497,7 @@ class _Sparkline extends StatelessWidget {
                   toY: bars[i].toDouble(),
                   width: 7,
                   borderRadius: BorderRadius.circular(2),
-                  color: i == 6 ? appGreen : appTextSecondary.withValues(alpha: 0.35),
+                  color: i == 6 ? appGreen : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
                 ),
               ]),
           ],
@@ -516,7 +513,7 @@ class _TargetWeightRow extends StatelessWidget {
 
   const _TargetWeightRow({required this.current, required this.target});
 
-  @override
+@override
   Widget build(BuildContext context) {
     final diff = current - target;
     final String text;
@@ -530,11 +527,11 @@ class _TargetWeightRow extends StatelessWidget {
 
     return Row(
       children: [
-        const Icon(Icons.flag_outlined, size: 14, color: appGreen),
+        Icon(Icons.flag_outlined, size: 14, color: appGreen),
         const SizedBox(width: 6),
         Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
             color: appGreen,
@@ -550,7 +547,7 @@ class _MacroBars extends StatelessWidget {
 
   const _MacroBars({required this.state});
 
-  @override
+@override
   Widget build(BuildContext context) {
     double sum(double? Function(dynamic item) extract) => state.meals.fold<double>(
         0,
@@ -599,6 +596,7 @@ class _MacroBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final target = goal;
     final progress =
         target == null || target <= 0 ? 0.0 : (current / target).clamp(0.0, 1.0);
@@ -609,7 +607,7 @@ class _MacroBar extends StatelessWidget {
           width: 64,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 12, color: appTextSecondary),
+            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
           ),
         ),
         Expanded(
@@ -619,7 +617,7 @@ class _MacroBar extends StatelessWidget {
               value: progress,
               minHeight: 5,
               color: color,
-              backgroundColor: appFill,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           ),
         ),
@@ -631,7 +629,7 @@ class _MacroBar extends StatelessWidget {
                 ? '${current.toStringAsFixed(0)}/${target}g'
                 : '${current.toStringAsFixed(0)}g',
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 11.5, color: appTextSecondary),
+            style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
           ),
         ),
       ],
@@ -646,6 +644,7 @@ class _TrendsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -674,18 +673,18 @@ class _TrendsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: appCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appHairline),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.restaurant, size: 18, color: appGreen),
+              Icon(Icons.restaurant, size: 18, color: appGreen),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Calorias',
                 style: TextStyle(
                   fontSize: 17,
@@ -694,23 +693,23 @@ class _TrendsCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.chevron_right, size: 20, color: appTextSecondary),
+              Icon(Icons.chevron_right, size: 20, color: theme.colorScheme.onSurfaceVariant),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             statement,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: appTextPrimary,
+              color: theme.colorScheme.onSurface,
               height: 1.4,
             ),
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              _LegendDot(color: appTextSecondary.withValues(alpha: 0.5), label: 'Semana anterior'),
+              _LegendDot(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5), label: 'Semana anterior'),
               const SizedBox(width: 12),
               _LegendDot(color: appGreen, label: 'Esta semana'),
             ],
@@ -746,7 +745,7 @@ class _TrendsCard extends StatelessWidget {
                     if (hasComparison)
                       HorizontalLine(
                         y: previousAvg,
-                        color: appTextSecondary.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                         strokeWidth: 1,
                         dashArray: [4, 4],
                         label: HorizontalLineLabel(
@@ -754,9 +753,9 @@ class _TrendsCard extends StatelessWidget {
                           alignment: Alignment.topRight,
                           labelResolver: (line) =>
                               'média anterior ${previousAvg.round()}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 9.5,
-                            color: appTextSecondary,
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -771,7 +770,7 @@ class _TrendsCard extends StatelessWidget {
                         alignment: Alignment.bottomRight,
                         labelResolver: (line) =>
                             'média atual ${currentAvg.round()}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 9.5,
                           color: appGreen,
                           fontWeight: FontWeight.w600,
@@ -787,7 +786,7 @@ class _TrendsCard extends StatelessWidget {
                         toY: previous[i].toDouble(),
                         width: 9,
                         borderRadius: BorderRadius.circular(3),
-                        color: appTextSecondary.withValues(alpha: 0.35),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
                       ),
                     ]),
                   for (var i = 0; i < current.length; i++)
@@ -817,6 +816,7 @@ class _LegendDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -828,7 +828,7 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(fontSize: 11.5, color: appTextSecondary),
+          style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -850,22 +850,23 @@ class _WaterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: appCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appHairline),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
-          const Text('💧', style: TextStyle(fontSize: 18)),
+          Text('💧', style: TextStyle(fontSize: 18)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Água',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
@@ -876,13 +877,13 @@ class _WaterCard extends StatelessWidget {
                     value: (cups / _goal).clamp(0.0, 1.0),
                     minHeight: 5,
                     color: appWaterBlue,
-                    backgroundColor: appFill,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$cups/$_goal copos · ${cups * 250} ml',
-                  style: const TextStyle(fontSize: 11.5, color: appTextSecondary),
+                  style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -910,8 +911,9 @@ class _WaterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Material(
-      color: appFill,
+      color: theme.colorScheme.surfaceContainerHighest,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -922,7 +924,7 @@ class _WaterButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: enabled ? appTextPrimary : appTextSecondary.withValues(alpha: 0.4),
+            color: enabled ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           ),
         ),
       ),
@@ -941,6 +943,7 @@ class _FavoritesSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     Future<void> repeat(FavoriteMeal favorite) async {
       try {
         final user = ref.read(supabaseProvider).auth.currentUser;
@@ -974,19 +977,19 @@ class _FavoritesSection extends ConsumerWidget {
       children: [
         Row(
           children: [
-            const Text(
+            Text(
               'Favoritas',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: appTextPrimary,
+                color: theme.colorScheme.onSurface,
                 letterSpacing: -0.4,
               ),
             ),
             const Spacer(),
             TextButton(
               onPressed: () => context.go('/history'),
-              child: const Text('Ver histórico ›'),
+              child: Text('Ver histórico ›'),
             ),
           ],
         ),
@@ -1018,6 +1021,7 @@ class _FavoritePhotoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final total = favorite.items.fold<int>(0, (sum, item) => sum + item.calories);
     return InkWell(
       onTap: onTap,
@@ -1036,9 +1040,9 @@ class _FavoritePhotoCard extends StatelessWidget {
                     ? Image.network(
                         favorite.imageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _photoFallback(),
+                        errorBuilder: (_, _, _) => _photoFallback(context),
                       )
-                    : _photoFallback(),
+                    : _photoFallback(context),
               ),
             ),
             const SizedBox(height: 6),
@@ -1046,15 +1050,15 @@ class _FavoritePhotoCard extends StatelessWidget {
               favorite.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: appTextPrimary,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             Text(
               '$total kcal',
-              style: const TextStyle(fontSize: 11, color: appTextSecondary),
+              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -1062,11 +1066,12 @@ class _FavoritePhotoCard extends StatelessWidget {
     );
   }
 
-  Widget _photoFallback() {
+Widget _photoFallback(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      color: appFill,
+      color: theme.colorScheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: const Icon(Icons.restaurant, size: 20, color: appTextSecondary),
+      child: Icon(Icons.restaurant, size: 20, color: theme.colorScheme.onSurfaceVariant),
     );
   }
 }
@@ -1081,7 +1086,7 @@ class _DeleteBackground extends StatelessWidget {
         color: appRed,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Icon(Icons.delete_outline, color: Colors.white, size: 22),
+      child: Icon(Icons.delete_outline, color: Colors.white, size: 22),
     );
   }
 }
@@ -1091,21 +1096,22 @@ class _EmptyMeals extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: appCard,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appHairline),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
-      child: const Column(
+child: Column(
         children: [
-          Icon(Icons.restaurant, size: 32, color: appTextSecondary),
+          Icon(Icons.restaurant, size: 32, color: theme.colorScheme.onSurfaceVariant),
           SizedBox(height: 10),
           Text(
             'Ainda não registaste refeições hoje.\nTira uma foto ao teu prato para começar.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13.5, color: appTextSecondary, height: 1.4),
+            style: TextStyle(fontSize: 13.5, color: theme.colorScheme.onSurfaceVariant, height: 1.4),
           ),
         ],
       ),
@@ -1120,18 +1126,19 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 36, color: appTextSecondary),
+            Icon(Icons.error_outline, size: 36, color: theme.colorScheme.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: appTextSecondary),
+              style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),

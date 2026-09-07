@@ -159,7 +159,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -174,7 +174,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         IconButton(
                           onPressed: () => setState(
                               () => _step = _steps[_stepIndex - 1]),
-                          icon: const Icon(Icons.arrow_back),
+                          icon: Icon(Icons.arrow_back),
                         )
                       else
                         const SizedBox(width: 48),
@@ -224,13 +224,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ],
               ),
             ),
-            Expanded(
+Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: ListView(
                   key: ValueKey('body-${_step.name}'),
                   padding: const EdgeInsets.all(20),
-                  children: _stepBody(),
+                  children: _stepBody(context),
                 ),
               ),
             ),
@@ -262,7 +262,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: _saving ? null : _skip,
-                      child: const Text('Adicionar mais tarde'),
+                      child: Text('Adicionar mais tarde'),
                     ),
                   ],
                 ],
@@ -315,9 +315,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  List<Widget> _stepBody() {
+  List<Widget> _stepBody(BuildContext context) {
     final theme = Theme.of(context);
-    switch (_step) {
+        switch (_step) {
       case OnboardingStep.name:
         return [
           TextField(
@@ -335,7 +335,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         return [
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.cake_outlined),
+            leading: Icon(Icons.cake_outlined),
             title: Text(
               _birthDate == null
                   ? 'Data de nascimento'
@@ -344,7 +344,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Icon(Icons.chevron_right),
             onTap: () async {
               final picked = await showDatePicker(
                 context: context,
@@ -451,20 +451,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     'SUGESTÃO PARA TI',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: appTextSecondary,
+                      color: theme.colorScheme.onSurfaceVariant,
                       letterSpacing: 0.6,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     '$_suggestedGoal kcal/dia',
-                    style: const TextStyle(
-                      color: appTextPrimary,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
                       fontSize: 30,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.8,
@@ -477,13 +477,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: appFill,
+                color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text(
+              child: Text(
                 'Completa os dados anteriores (peso, altura e atividade) '
                 'para receberes uma sugestão personalizada.',
-                style: TextStyle(fontSize: 13.5, color: appTextSecondary, height: 1.4),
+                style: TextStyle(fontSize: 13.5, color: theme.colorScheme.onSurfaceVariant, height: 1.4),
               ),
             ),
           const SizedBox(height: 16),
@@ -515,8 +515,9 @@ class _ObjectiveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Material(
-      color: selected ? appGreen.withValues(alpha: 0.06) : appCard,
+      color: selected ? appGreen.withValues(alpha: 0.06) : theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -526,7 +527,7 @@ class _ObjectiveCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? appGreen : appHairline,
+              color: selected ? appGreen : theme.colorScheme.outlineVariant,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -535,7 +536,7 @@ class _ObjectiveCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: selected ? appGreen : appTextSecondary,
+                color: selected ? appGreen : theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -544,14 +545,14 @@ class _ObjectiveCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: appTextPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ),
               Icon(
                 selected ? Icons.check_circle : Icons.circle_outlined,
                 size: 20,
-                color: selected ? appGreen : appHairline,
+                color: selected ? appGreen : theme.colorScheme.outlineVariant,
               ),
             ],
           ),

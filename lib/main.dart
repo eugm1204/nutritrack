@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:web/web.dart' as web;
 
@@ -18,6 +19,14 @@ final updateAvailableNotifier = ValueNotifier<bool>(false);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('pt_PT');
+
+  final prefs = await SharedPreferences.getInstance();
+  final savedMode = prefs.getString('theme_mode');
+  themeModeNotifier.value = savedMode == 'dark'
+      ? ThemeMode.dark
+      : savedMode == 'light'
+          ? ThemeMode.light
+          : ThemeMode.system;
 
   if (AppConfig.isConfigured) {
     await Supabase.initialize(
@@ -91,12 +100,15 @@ class NutriTrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'NutriTrack',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      routerConfig: appRouter,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier,
+      builder: (context, themeMode, _) => MaterialApp.router(
+        title: 'NutriTrack',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: themeMode,
+        routerConfig: appRouter,
       builder: (context, child) {
         return SplashGate(
           child: Column(
@@ -139,6 +151,7 @@ class NutriTrackApp extends StatelessWidget {
           ),
         );
       },
+      ),
     );
   }
 }
