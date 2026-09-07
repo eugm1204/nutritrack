@@ -77,7 +77,7 @@ class DashboardController extends AsyncNotifier<DashboardState> {
         .fetchMealsForDate(date, userId);
 
     final today = DateTime.now();
-    final weekStart = today.subtract(const Duration(days: 6));
+    final weekStart = today.subtract(const Duration(days: 13));
     final weekTotals = await ref
         .watch(mealRepositoryProvider)
         .fetchTotalsForRange(weekStart, today, userId);

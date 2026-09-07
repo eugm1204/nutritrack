@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme.dart';
 import '../../widgets/count_up_text.dart';
@@ -195,18 +196,28 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.memory(
-                state.previewBytes!,
-                height: 240,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  height: 240,
-                  color: appFill,
-                  child: const Icon(Icons.image_outlined, size: 48, color: appTextSecondary),
-                ),
+              child: Stack(
+                children: [
+                  Image.memory(
+                    state.previewBytes!,
+                    height: 240,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      height: 240,
+                      color: appFill,
+                      child: const Icon(Icons.image_outlined, size: 48, color: appTextSecondary),
+                    ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    bottom: 12,
+                    child: _PhotoOverlayChip(state: state),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             TextField(
               controller: _nameController,
               onChanged: controller.updateMealName,
@@ -215,6 +226,11 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                 labelText: 'Nome da refeição',
                 prefixIcon: Icon(Icons.label_outline, size: 18),
               ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Hoje · ${DateFormat('HH:mm', 'pt_PT').format(DateTime.now())}',
+              style: const TextStyle(fontSize: 12.5, color: appTextSecondary),
             ),
             const SizedBox(height: 14),
             Row(
@@ -283,23 +299,71 @@ class _ConfirmViewState extends ConsumerState<_ConfirmView> {
                   ],
                 ),
               ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: appTextPrimary),
-                ),
-                Text(
-                  '${state.totalCalories} kcal',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: appTextPrimary,
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: appCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: appHairline),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Resumo',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: appTextPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Detetados ${state.items.length} '
+                        '${state.items.length == 1 ? 'item' : 'itens'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: appTextSecondary,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  Divider(color: appHairline, height: 1),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: appTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${state.totalCalories} kcal',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: appTextPrimary,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Estimativa por IA — podes corrigir qualquer valor.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: appTextSecondary),
             ),
             if (state.error != null) ...[
               const SizedBox(height: 8),
@@ -397,6 +461,70 @@ class _MacroStat extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+class _PhotoOverlayChip extends StatelessWidget {
+  final dynamic state;
+
+  const _PhotoOverlayChip({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    double sum(double? Function(dynamic item) extract) => state.items.fold<double>(
+        0, (a, item) => a + (extract(item) ?? 0));
+    final protein = sum((item) => item.protein);
+    final carbs = sum((item) => item.carbs);
+    final fat = sum((item) => item.fat);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            ' kcal',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 10),
+          _macro(protein, macroProteinColor),
+          const SizedBox(width: 6),
+          _macro(carbs, macroCarbsColor),
+          const SizedBox(width: 6),
+          _macro(fat, macroFatColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _macro(double value, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          'g',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

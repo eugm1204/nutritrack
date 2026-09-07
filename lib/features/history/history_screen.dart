@@ -96,12 +96,25 @@ class _InsightsCard extends StatelessWidget {
     final change = insights.changePercent;
     final hasPrevious = insights.previousWeekKcal != null;
 
-    return PressableCard(
+return PressableCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Insights da semana', style: theme.textTheme.titleMedium),
+          Text('Tendências', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 10),
+          Text(
+            'Registaste refeições em ${insights.daysLogged} de 7 dias, '
+            'com média de ${insights.avgKcalPerDay} kcal.',
+            style: const TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w600,
+              color: appTextPrimary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Divider(color: appHairline, height: 1),
           const SizedBox(height: 12),
           Row(
             children: [

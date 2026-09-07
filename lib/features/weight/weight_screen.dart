@@ -182,6 +182,42 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                 children: [
                                   Row(
                                     children: [
+                                      const Icon(Icons.monitor_weight_outlined,
+                                          size: 18, color: appGreen),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        'Peso',
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w600,
+                                          color: appGreen,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      if (_targetWeight != null)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: appFill,
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            'Meta ${_targetWeight!.toStringAsFixed(0)} kg',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: appTextPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
                                       Text(
                                         '${latest!.toStringAsFixed(1)} kg',
                                         style: const TextStyle(

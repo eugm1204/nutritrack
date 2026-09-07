@@ -12,7 +12,6 @@ import '../../widgets/animated_list_item.dart';
 import '../../widgets/celebration_dialog.dart';
 import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
-import '../../widgets/pressable_card.dart';
 import '../../widgets/suggestion_sheet.dart';
 import '../auth/auth_controller.dart';
 import '../onboarding/onboarding_screen.dart';
@@ -24,7 +23,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(dashboardControllerProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: dashboard.when(
@@ -39,75 +37,20 @@ class DashboardScreen extends ConsumerWidget {
             child: RefreshIndicator(
               onRefresh: () => ref.refresh(dashboardControllerProvider.future),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _greetingWithName(state.name),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: appTextPrimary,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              DateFormat('EEEE, d MMM', 'pt_PT').format(DateTime.now()),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: appTextSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (state.streakDays > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: appFill,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '🔥 ${state.streakDays}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: appTextPrimary,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      _HeaderAvatar(
-                        avatarUrl: state.avatarUrl,
-                        name: state.name,
-                        onTap: () => context.push('/settings'),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.logout, size: 20, color: appTextSecondary),
-                        tooltip: 'Terminar sessão',
-                        onPressed: () =>
-                            ref.read(authControllerProvider.notifier).signOut(),
-                      ),
-                    ],
+                  _GreetingHeader(
+                    name: state.name,
+                    avatarUrl: state.avatarUrl,
+                    streakDays: state.streakDays,
+                    onSettings: () => context.push('/settings'),
+                    onLogout: () =>
+                        ref.read(authControllerProvider.notifier).signOut(),
                   ),
-                  const SizedBox(height: 16),
-                  _ProgressCard(
+                  const SizedBox(height: 20),
+                  _CalorieCard(
                     state: state,
-                    onSuggest: state.remainingCalories >= 200
-                        ? () => _openSuggestions(context, ref, state)
-                        : null,
+                    onTap: () => context.go('/history'),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
@@ -115,7 +58,25 @@ class DashboardScreen extends ConsumerWidget {
                     icon: const Icon(Icons.photo_camera_outlined, size: 20),
                     label: const Text('Analisar refeição'),
                   ),
-                  const SizedBox(height: 24),
+                  if (state.remainingCalories >= 200) ...[
+                    const SizedBox(height: 2),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => _openSuggestions(context, ref, state),
+                        icon: const Icon(Icons.lightbulb_outline, size: 16),
+                        label: const Text('O que comer?'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: appGreen,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
                   if (state.favorites.isNotEmpty) ...[
                     _FavoritesSection(
                       favorites: state.favorites,
@@ -125,37 +86,12 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  Text(
-                    'Refeições',
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  _SectionTitle('Refeições'),
                   const SizedBox(height: 8),
                   if (state.meals.isEmpty)
                     const _EmptyMeals()
                   else
-                    for (var i = 0; i < state.meals.length; i++)
-                      AnimatedListItem(
-                        index: i,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Dismissible(
-                            key: ValueKey('meal-${state.meals[i].id}'),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (_) => ref
-                                .read(dashboardControllerProvider.notifier)
-                                .deleteMeal(state.meals[i].id),
-                            background: _DeleteBackground(),
-                            child: MealCard(
-                              meal: state.meals[i],
-                              onTap: () =>
-                                  context.push('/meal', extra: state.meals[i]),
-                              onDelete: () => ref
-                                  .read(dashboardControllerProvider.notifier)
-                                  .deleteMeal(state.meals[i].id),
-                            ),
-                          ),
-                        ),
-                      ),
+                    ..._mealGroups(state.meals, context, ref),
                   const SizedBox(height: 24),
                   _WaterCard(
                     cups: state.waterCups,
@@ -165,8 +101,11 @@ class DashboardScreen extends ConsumerWidget {
                         .read(dashboardControllerProvider.notifier)
                         .removeWater(),
                   ),
-                  const SizedBox(height: 16),
-                  _WeeklyChart(state: state),
+                  const SizedBox(height: 24),
+                  _SectionTitle('Tendências'),
+                  const SizedBox(height: 8),
+                  _TrendsCard(state: state),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -176,7 +115,88 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  static String _greetingWithName(String? name) {
+  List<Widget> _mealGroups(
+    List<dynamic> meals,
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final mealsByPart = <String, List<dynamic>>{
+      'Manhã': [],
+      'Tarde': [],
+      'Noite': [],
+    };
+    for (final meal in meals) {
+      final h = meal.consumedAt.hour;
+      final part = h < 11 ? 'Manhã' : (h < 18 ? 'Tarde' : 'Noite');
+      mealsByPart[part]!.add(meal);
+    }
+
+    var index = 0;
+    final widgets = <Widget>[];
+    for (final entry in mealsByPart.entries) {
+      if (entry.value.isEmpty) continue;
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 6),
+        child: Text(
+          entry.key,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: appTextSecondary,
+          ),
+        ),
+      ));
+      for (final meal in entry.value) {
+        widgets.add(AnimatedListItem(
+          index: index++,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Dismissible(
+              key: ValueKey('meal-${meal.id}'),
+              direction: DismissDirection.endToStart,
+              onDismissed: (_) => ref
+                  .read(dashboardControllerProvider.notifier)
+                  .deleteMeal(meal.id),
+              background: _DeleteBackground(),
+              child: MealCard(
+                meal: meal,
+                onTap: () => context.push('/meal', extra: meal),
+                onDelete: () =>
+                    ref.read(dashboardControllerProvider.notifier).deleteMeal(meal.id),
+              ),
+            ),
+          ),
+        ));
+      }
+    }
+    return widgets;
+  }
+
+  static String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Bom dia,';
+    if (h < 19) return 'Boa tarde,';
+    return 'Boa noite,';
+  }
+}
+
+class _GreetingHeader extends StatelessWidget {
+  final String? name;
+  final String? avatarUrl;
+  final int streakDays;
+  final VoidCallback onSettings;
+  final VoidCallback onLogout;
+
+  const _GreetingHeader({
+    required this.name,
+    required this.avatarUrl,
+    required this.streakDays,
+    required this.onSettings,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final trimmed = name?.trim() ?? '';
     final firstName = trimmed.isEmpty
         ? ''
@@ -184,26 +204,178 @@ class DashboardScreen extends ConsumerWidget {
     final display =
         firstName.length > 14 ? '${firstName.substring(0, 12)}…' : firstName;
 
-    final h = DateTime.now().hour;
-    final greeting = h < 12 ? 'Bom dia' : (h < 19 ? 'Boa tarde' : 'Boa noite');
-    return display.isEmpty ? greeting : '$greeting, $display';
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: appTextPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                  children: [
+                    TextSpan(text: DashboardScreen._greeting()),
+                    if (display.isNotEmpty)
+                      TextSpan(
+                        text: ' $display',
+                        style: const TextStyle(color: appTextSecondary),
+                      ),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                DateFormat('EEEE, d MMM', 'pt_PT').format(DateTime.now()),
+                style: const TextStyle(fontSize: 13, color: appTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        if (streakDays > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: appFill,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '🔥 $streakDays',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: appTextPrimary,
+              ),
+            ),
+          ),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: appCard,
+            shape: BoxShape.circle,
+            border: Border.all(color: appHairline),
+          ),
+          child: _HeaderAvatar(
+            avatarUrl: avatarUrl,
+            name: name,
+            onTap: onSettings,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout, size: 20, color: appTextSecondary),
+          tooltip: 'Terminar sessão',
+          onPressed: onLogout,
+        ),
+      ],
+    );
   }
 }
 
-class _ProgressCard extends StatelessWidget {
-  final DashboardState state;
-  final VoidCallback? onSuggest;
+class _HeaderAvatar extends StatelessWidget {
+  final String? avatarUrl;
+  final String? name;
+  final VoidCallback onTap;
 
-  const _ProgressCard({required this.state, this.onSuggest});
+  const _HeaderAvatar({
+    required this.avatarUrl,
+    required this.name,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final consumed = state.consumedCalories;
+    final avatarUrl = this.avatarUrl;
+    final initial = name != null && name!.trim().isNotEmpty
+        ? name!.trim()[0].toUpperCase()
+        : 'N';
+
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: appFill,
+        ),
+        alignment: Alignment.center,
+        child: avatarUrl != null
+            ? ClipOval(
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, progress) => progress == null
+                        ? child
+                        : Container(color: appFill),
+                    errorBuilder: (_, _, _) => _InitialText(initial: initial),
+                  ),
+                ),
+              )
+            : _InitialText(initial: initial),
+      ),
+    );
+  }
+}
+
+class _InitialText extends StatelessWidget {
+  final String initial;
+
+  const _InitialText({required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      initial,
+      style: const TextStyle(
+        color: appTextPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 15,
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: appTextPrimary,
+        letterSpacing: -0.4,
+      ),
+    );
+  }
+}
+
+class _CalorieCard extends StatelessWidget {
+  final DashboardState state;
+  final VoidCallback onTap;
+
+  const _CalorieCard({required this.state, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     final remaining = state.remainingCalories;
-    final goal = state.goalCalories;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: appCard,
         borderRadius: BorderRadius.circular(16),
@@ -212,44 +384,58 @@ class _ProgressCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  const Icon(Icons.restaurant, size: 18, color: appGreen),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Calorias',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: appGreen,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.chevron_right, size: 20, color: appTextSecondary),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CountUpText(
-                      target: remaining < 0 ? 0 : remaining,
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w700,
-                        color: appTextPrimary,
-                        letterSpacing: -0.8,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      remaining >= 0 ? 'kcal restantes hoje' : 'acima da meta',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: appTextSecondary,
-                      ),
-                    ),
-                  ],
+              CountUpText(
+                target: remaining < 0 ? 0 : remaining,
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w700,
+                  color: appTextPrimary,
+                  letterSpacing: -0.8,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
-              const SizedBox(width: 12),
-              AnimatedCalorieRing(
-                progress: state.progress,
-                consumed: consumed,
-                goal: goal,
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  remaining >= 0 ? 'kcal restantes' : 'acima da meta',
+                  style: const TextStyle(fontSize: 13, color: appTextSecondary),
+                ),
               ),
+              const Spacer(),
+              _Sparkline(state: state),
             ],
           ),
-          const SizedBox(height: 16),
-          _MacroBars(state: state),
           const SizedBox(height: 14),
+          _MacroBars(state: state),
+          const SizedBox(height: 12),
           Text(
             _motivation(remaining: remaining, progress: state.progress),
             style: const TextStyle(
@@ -265,21 +451,6 @@ class _ProgressCard extends StatelessWidget {
               target: state.targetWeightKg!,
             ),
           ],
-          if (onSuggest != null) ...[
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onSuggest,
-                icon: const Icon(Icons.lightbulb_outline, size: 16),
-                label: const Text('O que comer?'),
-                style: TextButton.styleFrom(
-                  foregroundColor: appGreen,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -292,6 +463,50 @@ class _ProgressCard extends StatelessWidget {
     if (progress < 0.7) return 'Vais a bom caminho hoje.';
     if (progress < 0.9) return 'Quase lá — faltam $remaining kcal.';
     return 'Só faltam $remaining kcal para a meta.';
+  }
+}
+
+class _Sparkline extends StatelessWidget {
+  final DashboardState state;
+
+  const _Sparkline({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final bars = List.generate(7, (i) {
+      final day = today.subtract(Duration(days: 6 - i));
+      return state.weekTotals[DateTime(day.year, day.month, day.day)] ?? 0;
+    });
+    final maxY = bars.fold<int>(0, (m, v) => v > m ? v : m).clamp(100, 1 << 30);
+
+    return SizedBox(
+      width: 84,
+      height: 34,
+      child: BarChart(
+        BarChartData(
+          maxY: maxY.toDouble(),
+          minY: 0,
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          barTouchData: BarTouchData(enabled: false),
+          titlesData: const FlTitlesData(show: false),
+          barGroups: [
+            for (var i = 0; i < bars.length; i++)
+              BarChartGroupData(x: i, barRods: [
+                BarChartRodData(
+                  toY: bars[i].toDouble(),
+                  width: 7,
+                  borderRadius: BorderRadius.circular(2),
+                  color: i == 6 ? appGreen : appTextSecondary.withValues(alpha: 0.35),
+                ),
+              ]),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -424,85 +639,200 @@ class _MacroBar extends StatelessWidget {
   }
 }
 
-class AnimatedCalorieRing extends StatelessWidget {
-  final double progress;
-  final int consumed;
-  final int goal;
+class _TrendsCard extends StatelessWidget {
+  final DashboardState state;
 
-  const AnimatedCalorieRing({
-    super.key,
-    required this.progress,
-    required this.consumed,
-    required this.goal,
-  });
+  const _TrendsCard({required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final percent = goal <= 0 ? 0 : ((consumed / goal) * 100).round();
-    return SizedBox(
-      width: 96,
-      height: 96,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: progress),
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeOutCubic,
-        builder: (context, value, _) => CustomPaint(
-          painter: _RingPainter(progress: value),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$percent%',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: appTextPrimary,
-                    letterSpacing: -0.3,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    int totalFor(int daysAgo) =>
+        state.weekTotals[today.subtract(Duration(days: daysAgo))] ?? 0;
+
+    final current = [for (var i = 6; i >= 0; i--) totalFor(i)];
+    final previous = [for (var i = 13; i >= 7; i--) totalFor(i)];
+    final currentSum = current.fold(0, (a, b) => a + b);
+    final previousSum = previous.fold(0, (a, b) => a + b);
+    final currentAvg = currentSum / 7;
+    final previousAvg = previousSum / 7;
+
+    final hasComparison = previousSum > 0;
+    final pct = hasComparison
+        ? ((currentSum - previousSum) * 100 / previousSum).round()
+        : 0;
+    final wentDown = pct <= 0;
+
+    final statement = !hasComparison
+        ? 'Sem dados suficientes da semana anterior para comparar.'
+        : pct == 0
+            ? 'Esta semana consumiste o mesmo que a anterior.'
+            : 'Esta semana consumiste ${pct.abs()}% ${wentDown ? 'menos' : 'mais'} calorias que a anterior.';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: appCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: appHairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.restaurant, size: 18, color: appGreen),
+              const SizedBox(width: 8),
+              const Text(
+                'Calorias',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: appGreen,
                 ),
-                const Text(
-                  'consumido',
-                  style: TextStyle(fontSize: 10.5, color: appTextSecondary),
-                ),
-              ],
+              ),
+              const Spacer(),
+              const Icon(Icons.chevron_right, size: 20, color: appTextSecondary),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            statement,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: appTextPrimary,
+              height: 1.4,
             ),
           ),
-        ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _LegendDot(color: appTextSecondary.withValues(alpha: 0.5), label: 'Semana anterior'),
+              const SizedBox(width: 12),
+              _LegendDot(color: appGreen, label: 'Esta semana'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 120,
+            child: BarChart(
+              BarChartData(
+                maxY: (current.fold<int>(0, (m, v) => v > m ? v : m) *
+                        1.2)
+                    .clamp(100, 1 << 30)
+                    .toDouble(),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+                        BarTooltipItem(
+                      '${rod.toY.round()} kcal',
+                      Theme.of(context).textTheme.bodySmall!,
+                    ),
+                  ),
+                ),
+                titlesData: const FlTitlesData(
+                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    if (hasComparison)
+                      HorizontalLine(
+                        y: previousAvg,
+                        color: appTextSecondary.withValues(alpha: 0.5),
+                        strokeWidth: 1,
+                        dashArray: [4, 4],
+                        label: HorizontalLineLabel(
+                          show: true,
+                          alignment: Alignment.topRight,
+                          labelResolver: (line) =>
+                              'média anterior ${previousAvg.round()}',
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            color: appTextSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    HorizontalLine(
+                      y: currentAvg,
+                      color: appGreen,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
+                      label: HorizontalLineLabel(
+                        show: true,
+                        alignment: Alignment.bottomRight,
+                        labelResolver: (line) =>
+                            'média atual ${currentAvg.round()}',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          color: appGreen,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                barGroups: [
+                  for (var i = 0; i < previous.length; i++)
+                    BarChartGroupData(x: i, barRods: [
+                      BarChartRodData(
+                        toY: previous[i].toDouble(),
+                        width: 9,
+                        borderRadius: BorderRadius.circular(3),
+                        color: appTextSecondary.withValues(alpha: 0.35),
+                      ),
+                    ]),
+                  for (var i = 0; i < current.length; i++)
+                    BarChartGroupData(x: i + 7, barRods: [
+                      BarChartRodData(
+                        toY: current[i].toDouble(),
+                        width: 9,
+                        borderRadius: BorderRadius.circular(3),
+                        color: appGreen,
+                      ),
+                    ]),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _RingPainter extends CustomPainter {
-  final double progress;
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
 
-  _RingPainter({required this.progress});
+  const _LegendDot({required this.color, required this.label});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    const stroke = 10.0;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - stroke) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    final track = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..color = appFill;
-    canvas.drawCircle(center, radius, track);
-
-    final arc = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round
-      ..color = appGreen;
-    canvas.drawArc(rect, -1.5708, progress * 6.2832, false, arc);
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11.5, color: appTextSecondary),
+        ),
+      ],
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter old) => old.progress != progress;
 }
 
 class _WaterCard extends StatelessWidget {
@@ -600,112 +930,6 @@ class _WaterButton extends StatelessWidget {
   }
 }
 
-class _WeeklyChart extends StatelessWidget {
-  final DashboardState state;
-
-  const _WeeklyChart({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final today = state.date;
-
-    final bars = List.generate(7, (i) {
-      final day = today.subtract(Duration(days: 6 - i));
-      final total = state.weekTotals[DateTime(day.year, day.month, day.day)] ?? 0;
-      return (day: day, total: total);
-    });
-
-    final maxY = bars.fold<int>(0, (m, b) => b.total > m ? b.total : m);
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      decoration: BoxDecoration(
-        color: appCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appHairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Últimos 7 dias', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 140,
-            child: BarChart(
-              BarChartData(
-                maxY: (maxY * 1.2).clamp(100, double.infinity),
-                barTouchData: BarTouchData(
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) =>
-                        BarTooltipItem('${rod.toY.round()} kcal', theme.textTheme.bodySmall!),
-                  ),
-                ),
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    HorizontalLine(
-                      y: state.goalCalories.toDouble(),
-                      color: appTextSecondary.withValues(alpha: 0.5),
-                      strokeWidth: 1,
-                      dashArray: [5, 5],
-                    ),
-                  ],
-                ),
-                titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 || index >= bars.length) return const SizedBox.shrink();
-                        final isToday = index == 6;
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            isToday ? 'Hoje' : _dayAbbrev(bars[index].day),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                              color: isToday ? appGreen : appTextSecondary,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                barGroups: [
-                  for (var i = 0; i < bars.length; i++)
-                    BarChartGroupData(x: i, barRods: [
-                      BarChartRodData(
-                        toY: bars[i].total.toDouble(),
-                        width: 16,
-                        borderRadius: BorderRadius.circular(6),
-                        color: i == 6
-                            ? appGreen
-                            : appGreen.withValues(alpha: 0.22),
-                      ),
-                    ]),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _dayAbbrev(DateTime day) {
-    const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    return weekdays[day.weekday - 1];
-  }
-}
-
 class _FavoritesSection extends ConsumerWidget {
   final List<FavoriteMeal> favorites;
   final VoidCallback onRepeated;
@@ -717,8 +941,6 @@ class _FavoritesSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
     Future<void> repeat(FavoriteMeal favorite) async {
       try {
         final user = ref.read(supabaseProvider).auth.currentUser;
@@ -750,18 +972,35 @@ class _FavoritesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Favoritas', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Text(
+              'Favoritas',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: appTextPrimary,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => context.go('/history'),
+              child: const Text('Ver histórico ›'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               for (final favorite in favorites) ...[
-                _FavoriteChip(
+                _FavoritePhotoCard(
                   favorite: favorite,
                   onTap: () => repeat(favorite),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
               ],
             ],
           ),
@@ -771,46 +1010,63 @@ class _FavoritesSection extends ConsumerWidget {
   }
 }
 
-class _FavoriteChip extends StatelessWidget {
+class _FavoritePhotoCard extends StatelessWidget {
   final FavoriteMeal favorite;
   final VoidCallback onTap;
 
-  const _FavoriteChip({required this.favorite, required this.onTap});
+  const _FavoritePhotoCard({required this.favorite, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final total = favorite.items.fold<int>(0, (sum, item) => sum + item.calories);
-    return PressableCard(
+    return InkWell(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star, size: 16, color: appOrange),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                favorite.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: appTextPrimary,
-                ),
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 96,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 96,
+                height: 62,
+                child: favorite.imageUrl != null
+                    ? Image.network(
+                        favorite.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _photoFallback(),
+                      )
+                    : _photoFallback(),
               ),
-              Text(
-                '$total kcal',
-                style: const TextStyle(fontSize: 11.5, color: appTextSecondary),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              favorite.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: appTextPrimary,
               ),
-            ],
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.play_circle_outline, size: 18, color: appGreen),
-        ],
+            ),
+            Text(
+              '$total kcal',
+              style: const TextStyle(fontSize: 11, color: appTextSecondary),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _photoFallback() {
+    return Container(
+      color: appFill,
+      alignment: Alignment.center,
+      child: const Icon(Icons.restaurant, size: 20, color: appTextSecondary),
     );
   }
 }
@@ -826,75 +1082,6 @@ class _DeleteBackground extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Icon(Icons.delete_outline, color: Colors.white, size: 22),
-    );
-  }
-}
-
-class _HeaderAvatar extends StatelessWidget {
-  final String? avatarUrl;
-  final String? name;
-  final VoidCallback onTap;
-
-  const _HeaderAvatar({
-    required this.avatarUrl,
-    required this.name,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final avatarUrl = this.avatarUrl;
-    final initial = name != null && name!.trim().isNotEmpty
-        ? name!.trim()[0].toUpperCase()
-        : 'N';
-
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: appFill,
-          border: Border.all(color: appHairline),
-        ),
-        alignment: Alignment.center,
-        child: avatarUrl != null
-            ? ClipOval(
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Image.network(
-                    avatarUrl,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) => progress == null
-                        ? child
-                        : Container(color: appFill),
-                    errorBuilder: (_, _, _) => _InitialText(initial: initial),
-                  ),
-                ),
-              )
-            : _InitialText(initial: initial),
-      ),
-    );
-  }
-}
-
-class _InitialText extends StatelessWidget {
-  final String initial;
-
-  const _InitialText({required this.initial});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      initial,
-      style: const TextStyle(
-        color: appTextPrimary,
-        fontWeight: FontWeight.w600,
-        fontSize: 16,
-      ),
     );
   }
 }
