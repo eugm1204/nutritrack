@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -339,7 +339,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             title: Text(
               _birthDate == null
                   ? 'Data de nascimento'
-                  : DateFormat('d MMM yyyy').format(_birthDate!),
+                  : DateFormat('d MMM yyyy', 'pt_PT').format(_birthDate!),
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),

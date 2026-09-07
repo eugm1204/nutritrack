@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -185,7 +185,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final buffer = StringBuffer();
       buffer.writeln('data,refeicao,alimento,calorias,proteina,hidratos,gordura');
       for (final meal in meals) {
-        final date = DateFormat('yyyy-MM-dd HH:mm').format(meal.consumedAt);
+        final date = DateFormat('yyyy-MM-dd HH:mm', 'pt_PT').format(meal.consumedAt);
         for (final item in meal.items) {
           buffer.writeln(
             '"$date","${meal.mealName}","${item.name}",${item.calories},'
@@ -336,7 +336,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: Text(
                   _birthDate == null
                       ? 'Data de nascimento'
-                      : DateFormat('d MMM yyyy').format(_birthDate!),
+                      : DateFormat('d MMM yyyy', 'pt_PT').format(_birthDate!),
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 trailing: const Icon(Icons.chevron_right),

@@ -45,7 +45,7 @@ class MealCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${meal.itemCount} ${meal.itemCount == 1 ? 'item' : 'itens'} · '
-                  '${DateFormat('HH:mm').format(meal.consumedAt)}',
+                  '${DateFormat('HH:mm', 'pt_PT').format(meal.consumedAt)}',
                   style: const TextStyle(
                     fontSize: 12.5,
                     color: appTextSecondary,
@@ -64,6 +64,7 @@ class MealCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                   color: appTextPrimary,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
               const Text(
@@ -107,7 +108,7 @@ class _MealThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = 56.0;
+    final size = 64.0;
     final image = SizedBox(
       width: size,
       height: size,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -131,7 +131,7 @@ class _InsightsCard extends StatelessWidget {
                 child: _InsightTile(
                   icon: Icons.thumb_up_alt_outlined,
                   iconColor: appGreen,
-                  label: 'Melhor dia',
+                  label: 'Mais equilibrado',
                   value: insights.bestDay != null
                       ? '${_dayShort(insights.bestDay!)} · ${insights.bestDayKcal} kcal'
                       : '—',
@@ -142,7 +142,7 @@ class _InsightsCard extends StatelessWidget {
                 child: _InsightTile(
                   icon: Icons.thumb_down_alt_outlined,
                   iconColor: appTextSecondary,
-                  label: 'Pior dia',
+                  label: 'Menos equilibrado',
                   value: insights.worstDay != null
                       ? '${_dayShort(insights.worstDay!)} · ${insights.worstDayKcal} kcal'
                       : '—',
@@ -203,7 +203,7 @@ class _InsightsCard extends StatelessWidget {
         now.year == day.year) {
       return 'Ontem';
     }
-    return DateFormat('EEEE').format(day).substring(0, 3);
+    return DateFormat('EEEE', 'pt_PT').format(day).substring(0, 3);
   }
 }
 
@@ -295,7 +295,7 @@ class _DayCard extends StatelessWidget {
         ? 'Hoje'
         : isYesterday
             ? 'Ontem'
-            : DateFormat('EEEE').format(day);
+            : DateFormat('EEEE', 'pt_PT').format(day);
     final progress = goalCalories <= 0 ? 0.0 : (total / goalCalories).clamp(0.0, 1.0);
 
     return PressableCard(
@@ -324,16 +324,19 @@ class _DayCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  DateFormat('d MMM').format(day),
+                  DateFormat('d MMM', 'pt_PT').format(day),
                   style: const TextStyle(fontSize: 14, color: appTextSecondary),
                 ),
               ),
+              _PhotoStack(meals: meals),
+              const SizedBox(width: 8),
               Text(
                 '$total',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: appTextPrimary,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
               const Text(
@@ -354,7 +357,7 @@ class _DayCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 5,
-              color: total > goalCalories ? appRed : appGreen,
+              color: total > goalCalories ? appOrange : appGreen,
               backgroundColor: appFill,
             ),
           ),
@@ -397,6 +400,63 @@ class _EmptyHistory extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+class _PhotoStack extends StatelessWidget {
+  final List<Meal> meals;
+
+  const _PhotoStack({required this.meals});
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = meals.where((m) => m.imageUrl != null).take(3).toList();
+
+    return SizedBox(
+      width: 62,
+      height: 28,
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          for (var i = 0; i < photos.length; i++)
+            Positioned(
+              left: i * 18.0,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: appFill,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: appCard, width: 1.5),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.network(
+                  photos[i].imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.restaurant,
+                    size: 13,
+                    color: appTextSecondary,
+                  ),
+                ),
+              ),
+            ),
+          if (photos.isEmpty)
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: appFill,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.restaurant,
+                size: 13,
+                color: appTextSecondary,
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeShell extends StatelessWidget {
@@ -13,16 +12,6 @@ class HomeShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      floatingActionButton: index == 0
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                context.push('/capture');
-              },
-              icon: const Icon(Icons.add_a_photo_outlined),
-              label: const Text('Adicionar'),
-            )
-          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) =>

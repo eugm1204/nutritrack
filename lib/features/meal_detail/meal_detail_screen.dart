@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -216,7 +216,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                 const SizedBox(height: 16),
               ],
               Text(
-                DateFormat('EEEE, d MMM · HH:mm').format(widget.meal.consumedAt),
+                DateFormat('EEEE, d MMM · HH:mm', 'pt_PT').format(widget.meal.consumedAt),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

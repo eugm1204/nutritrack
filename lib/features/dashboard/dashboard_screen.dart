@@ -1,4 +1,4 @@
-import 'package:fl_chart/fl_chart.dart';
+﻿import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -52,7 +52,7 @@ class DashboardScreen extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w700,
                                 color: appTextPrimary,
                                 letterSpacing: -0.3,
@@ -60,7 +60,7 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              DateFormat('EEEE, d MMM').format(DateTime.now()),
+                              DateFormat('EEEE, d MMM', 'pt_PT').format(DateTime.now()),
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: appTextSecondary,
@@ -115,18 +115,7 @@ class DashboardScreen extends ConsumerWidget {
                     icon: const Icon(Icons.photo_camera_outlined, size: 20),
                     label: const Text('Analisar refeição'),
                   ),
-                  const SizedBox(height: 20),
-                  _WaterCard(
-                    cups: state.waterCups,
-                    onAdd: () =>
-                        ref.read(dashboardControllerProvider.notifier).addWater(),
-                    onRemove: () => ref
-                        .read(dashboardControllerProvider.notifier)
-                        .removeWater(),
-                  ),
-                  const SizedBox(height: 16),
-                  _WeeklyChart(state: state),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   if (state.favorites.isNotEmpty) ...[
                     _FavoritesSection(
                       favorites: state.favorites,
@@ -134,7 +123,7 @@ class DashboardScreen extends ConsumerWidget {
                           .read(dashboardControllerProvider.notifier)
                           .refreshFavorites(),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                   ],
                   Text(
                     'Refeições',
@@ -167,6 +156,17 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
+                  const SizedBox(height: 24),
+                  _WaterCard(
+                    cups: state.waterCups,
+                    onAdd: () =>
+                        ref.read(dashboardControllerProvider.notifier).addWater(),
+                    onRemove: () => ref
+                        .read(dashboardControllerProvider.notifier)
+                        .removeWater(),
+                  ),
+                  const SizedBox(height: 16),
+                  _WeeklyChart(state: state),
                 ],
               ),
             ),
@@ -225,21 +225,14 @@ class _ProgressCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: appTextPrimary,
                         letterSpacing: -0.8,
+                        fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      remaining >= 0 ? 'de $goal kcal restantes' : 'acima da meta',
+                      remaining >= 0 ? 'kcal restantes hoje' : 'acima da meta',
                       style: const TextStyle(
                         fontSize: 13,
-                        color: appTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$consumed kcal consumidas',
-                      style: const TextStyle(
-                        fontSize: 12.5,
                         color: appTextSecondary,
                       ),
                     ),
@@ -273,13 +266,17 @@ class _ProgressCard extends StatelessWidget {
             ),
           ],
           if (onSuggest != null) ...[
-            const SizedBox(height: 14),
-            OutlinedButton.icon(
-              onPressed: onSuggest,
-              icon: const Icon(Icons.lightbulb_outline, size: 18),
-              label: const Text('O que comer?'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(46),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: onSuggest,
+                icon: const Icon(Icons.lightbulb_outline, size: 16),
+                label: const Text('O que comer?'),
+                style: TextButton.styleFrom(
+                  foregroundColor: appGreen,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                ),
               ),
             ),
           ],
@@ -307,11 +304,14 @@ class _TargetWeightRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final diff = current - target;
-    final (String text, bool positive) = diff.abs() < 0.25
-        ? ('Estás no teu peso alvo', true)
-        : diff > 0
-            ? ('Faltam ${diff.toStringAsFixed(1)} kg para o alvo', true)
-            : ('Ultrapassaste o alvo em ${diff.abs().toStringAsFixed(1)} kg', true);
+    final String text;
+    if (diff.abs() < 0.25) {
+      text = 'Estás no teu peso alvo';
+    } else if (diff > 0) {
+      text = 'Faltam ${diff.toStringAsFixed(1)} kg para o alvo';
+    } else {
+      text = 'Atingiste o teu alvo';
+    }
 
     return Row(
       children: [
@@ -319,10 +319,10 @@ class _TargetWeightRow extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           text,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: positive ? appGreen : appTextPrimary,
+            color: appGreen,
           ),
         ),
       ],
@@ -438,6 +438,7 @@ class AnimatedCalorieRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final percent = goal <= 0 ? 0 : ((consumed / goal) * 100).round();
     return SizedBox(
       width: 96,
       height: 96,
@@ -451,17 +452,18 @@ class AnimatedCalorieRing extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CountUpText(
-                  target: consumed,
+                Text(
+                  '$percent%',
                   style: const TextStyle(
-                    fontSize: 19,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: appTextPrimary,
-                    letterSpacing: -0.4,
+                    letterSpacing: -0.3,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
                 const Text(
-                  'kcal',
+                  'consumido',
                   style: TextStyle(fontSize: 10.5, color: appTextSecondary),
                 ),
               ],

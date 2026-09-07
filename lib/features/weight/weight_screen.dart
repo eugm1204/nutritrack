@@ -74,7 +74,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
               const SizedBox(height: 12),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(DateFormat('d MMM yyyy').format(date)),
+                title: Text(DateFormat('d MMM yyyy', 'pt_PT').format(date)),
                 leading: const Icon(Icons.calendar_today_outlined),
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -130,7 +130,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Apagar medição'),
         content: Text('${entry.weightKg.toStringAsFixed(1)} kg de '
-            '${DateFormat('d MMM').format(entry.recordedAt)}?'),
+            '${DateFormat('d MMM', 'pt_PT').format(entry.recordedAt)}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -189,23 +189,28 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                           fontWeight: FontWeight.w700,
                                           color: appTextPrimary,
                                           letterSpacing: -0.8,
+                                          fontFeatures: [FontFeature.tabularFigures()],
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
-                                      Icon(
-                                        change <= 0
-                                            ? Icons.trending_down
-                                            : Icons.trending_up,
-                                        color: change <= 0 ? appGreen : appRed,
-                                        size: 20,
-                                      ),
-                                      Text(
-                                        '${change.abs().toStringAsFixed(1)} kg',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: appTextSecondary,
+                                      if (_entries.length >= 2) ...[
+                                        const SizedBox(width: 10),
+                                        Icon(
+                                          change <= 0
+                                              ? Icons.trending_down
+                                              : Icons.trending_up,
+                                          color: change <= 0 ? appGreen : appRed,
+                                          size: 20,
                                         ),
-                                      ),
+                                        Text(
+                                          change == 0
+                                              ? 'sem mudança'
+                                              : '${change.abs().toStringAsFixed(1)} kg',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: appTextSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                   const SizedBox(height: 16),
@@ -238,7 +243,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                   style: const TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 subtitle: Text(
-                                  DateFormat('EEEE, d MMM yyyy').format(entry.recordedAt),
+                                  DateFormat('EEEE, d MMM yyyy', 'pt_PT').format(entry.recordedAt),
                                 ),
                                 onLongPress: () => _deleteEntry(entry),
                               ),
@@ -262,10 +267,17 @@ class _WeightChart extends StatelessWidget {
     final theme = Theme.of(context);
     final recent = entries.length > 30 ? entries.sublist(entries.length - 30) : entries;
 
-    final minW = recent.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
-    final maxW = recent.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
+    var minW = recent.map((e) => e.weightKg).reduce((a, b) => a < b ? a : b);
+    var maxW = recent.map((e) => e.weightKg).reduce((a, b) => a > b ? a : b);
     final target = targetWeight;
+
+    if (maxW - minW < 2) {
+      final mid = (minW + maxW) / 2;
+      minW = mid - 1;
+      maxW = mid + 1;
+    }
     final pad = ((maxW - minW) * 0.15).clamp(0.3, 5.0);
+    final showDots = recent.length <= 12;
 
     return LineChart(
       LineChartData(
@@ -319,7 +331,18 @@ class _WeightChart extends StatelessWidget {
             isCurved: true,
             color: appGreen,
             barWidth: 3,
-            dotData: const FlDotData(show: false),
+            dotData: showDots
+                ? FlDotData(
+                    show: true,
+                    getDotPainter: (spot, percent, barData, index) =>
+                        FlDotCirclePainter(
+                      radius: 3,
+                      color: appCard,
+                      strokeWidth: 2,
+                      strokeColor: appGreen,
+                    ),
+                  )
+                : const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
               color: appGreen.withValues(alpha: 0.07),
