@@ -54,6 +54,24 @@ flutter run -d chrome --dart-define=SUPABASE_URL=https://SEU-PROJETO.supabase.co
 
 > Nota: no iPhone, a câmara no Safari pode exigir permissão; o fluxo de galeria funciona sempre.
 
+### 3. Login com Google
+
+1. **Google Cloud Console** ([console.cloud.google.com](https://console.cloud.google.com)):
+   - Cria um projeto (ex: "NutriTrack")
+   - **APIs & Services → OAuth consent screen** → tipo *External* → nome do app + email
+   - **Credentials → Create Credentials → OAuth Client ID** → tipo **Web application**
+   - **Authorized redirect URI**: `https://<project-ref>.supabase.co/auth/v1/callback`
+   - Copia o **Client ID** e o **Client Secret**
+2. **Supabase Dashboard** → **Authentication → Sign In / Providers → Google** → ativa e cola o Client ID/Secret.
+3. O botão "Continuar com Google" aparece no login automaticamente.
+
+### 4. Login com Apple
+
+Necessita de **Apple Developer paga ($99/ano)**:
+1. No **Apple Developer Portal**: cria um **Services ID** + **Sign in with Apple** (configured com o domínio e redirect URL do Supabase) e uma **Key**.
+2. **Supabase Dashboard** → **Authentication → Sign In / Providers → Apple** → cola Services ID, Team ID e Key ID + chave privada.
+3. No código: muda `AppConfig.showAppleLogin = true` em `lib/core/config.dart` — o botão fica visível no login.
+
 ### 3. Build iOS (.ipa)
 
 Sem Mac nem Apple Developer paga, o `.ipa` não é gerável — o workflow `build-ios.yml` está pronto:

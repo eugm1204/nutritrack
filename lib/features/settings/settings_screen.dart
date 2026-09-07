@@ -556,7 +556,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       }
                     },
                   ),
-                  _SettingsRow(
+_SettingsRow(
                     icon: Icons.flag_outlined,
                     label: 'Peso alvo',
                     value: p.targetWeightKg != null
@@ -572,6 +572,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         await _saveField((x) => x.copyWith(
                               targetWeightKg: double.tryParse(value.trim()),
                             ));
+                      }
+                    },
+                  ),
+                  _SettingsRow(
+                    icon: Icons.water_drop_outlined,
+                    label: 'Meta de água',
+                    value: '${p.waterGoalCups} copos · ${p.waterGoalCups * 250} ml',
+                    onTap: () async {
+                      final value = await _editTextDialog(
+                        title: 'Meta de água (copos)',
+                        initial: '${p.waterGoalCups}',
+                        numeric: true,
+                      );
+                      final cups = int.tryParse(value?.trim() ?? '');
+                      if (cups != null && cups > 0 && cups <= 30) {
+                        await _saveField((x) => x.copyWith(waterGoalCups: cups));
                       }
                     },
                   ),

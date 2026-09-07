@@ -37,11 +37,23 @@ class HistoryState {
   final int goalCalories;
   final Map<DateTime, List<Meal>> mealsByDay;
   final WeeklyInsights insights;
+  final double avgProtein;
+  final double avgCarbs;
+  final double avgFat;
+  final int? proteinGoalG;
+  final int? carbsGoalG;
+  final int? fatGoalG;
 
   const HistoryState({
     required this.goalCalories,
     required this.mealsByDay,
     required this.insights,
+    this.avgProtein = 0,
+    this.avgCarbs = 0,
+    this.avgFat = 0,
+    this.proteinGoalG,
+    this.carbsGoalG,
+    this.fatGoalG,
   });
 }
 
@@ -70,10 +82,31 @@ class HistoryController extends AsyncNotifier<HistoryState> {
       byDay.putIfAbsent(key, () => []).add(meal);
     }
 
+    double proteinSum = 0, carbsSum = 0, fatSum = 0;
+    var counted = 0;
+    for (var i = 0; i < 7; i++) {
+      final day = today.subtract(Duration(days: i));
+      final meals = byDay[day] ?? const [];
+      if (meals.isNotEmpty) counted++;
+      for (final meal in meals) {
+        for (final item in meal.items) {
+          proteinSum += item.protein ?? 0;
+          carbsSum += item.carbs ?? 0;
+          fatSum += item.fat ?? 0;
+        }
+      }
+    }
+
     return HistoryState(
       goalCalories: profile.dailyGoalCalories,
       mealsByDay: byDay,
       insights: _computeInsights(byDay, profile.dailyGoalCalories),
+      avgProtein: counted > 0 ? proteinSum / counted : 0,
+      avgCarbs: counted > 0 ? carbsSum / counted : 0,
+      avgFat: counted > 0 ? fatSum / counted : 0,
+      proteinGoalG: profile.proteinGoalG,
+      carbsGoalG: profile.carbsGoalG,
+      fatGoalG: profile.fatGoalG,
     );
   }
 

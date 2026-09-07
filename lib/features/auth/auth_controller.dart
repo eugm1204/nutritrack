@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/config.dart';
 import '../../providers/providers.dart';
 
 class AuthState {
@@ -54,6 +55,26 @@ class AuthController extends Notifier<AuthState> {
       return true;
     } catch (e) {
       _log(e, 'login');
+      state = state.copyWith(loading: false, error: _message(e));
+      return false;
+    }
+  }
+
+  Future<bool> signInWithGoogle() => _signInWithOAuth(OAuthProvider.google);
+
+  Future<bool> signInWithApple() => _signInWithOAuth(OAuthProvider.apple);
+
+  Future<bool> _signInWithOAuth(OAuthProvider provider) async {
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      await ref.read(supabaseProvider).auth.signInWithOAuth(
+            provider,
+            redirectTo: AppConfig.webAppUrl,
+            queryParams: {'prompt': 'select_account'},
+          );
+      return true;
+    } catch (e) {
+      _log(e, 'oauth-${provider.name}');
       state = state.copyWith(loading: false, error: _message(e));
       return false;
     }

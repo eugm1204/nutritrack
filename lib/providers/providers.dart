@@ -11,6 +11,7 @@ import '../services/meal_repository.dart';
 import '../services/profile_repository.dart';
 import '../services/recent_foods_service.dart';
 import '../services/vision_service.dart';
+import '../services/water_repository.dart';
 import '../services/weight_repository.dart';
 
 final supabaseProvider = Provider<SupabaseClient>((ref) => Supabase.instance.client);
@@ -33,6 +34,10 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
 
 final weightRepositoryProvider = Provider<WeightRepository>(
   (ref) => WeightRepository(ref.watch(supabaseProvider)),
+);
+
+final waterRepositoryProvider = Provider<WaterRepository>(
+  (ref) => WaterRepository(ref.watch(supabaseProvider)),
 );
 
 final foodSearchServiceProvider = Provider<FoodSearchService>(

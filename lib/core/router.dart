@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../features/add_meal/add_meal_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
+import '../features/day/day_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/home/home_shell.dart';
 import '../features/manual_add/manual_add_screen.dart';
@@ -88,6 +89,11 @@ final appRouter = GoRouter(
       path: '/meal',
       pageBuilder: (context, state) =>
           _fadeSlide(MealDetailScreen(meal: state.extra! as dynamic)),
+    ),
+    GoRoute(
+      path: '/day',
+      pageBuilder: (context, state) =>
+          _fadeSlide(DayScreen(date: state.extra! as DateTime)),
     ),
     GoRoute(
       path: '/settings',

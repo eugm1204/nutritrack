@@ -3,6 +3,7 @@ class AppConfig {
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
   static const analyzeMealFunction = 'analyze-meal';
   static const webAppUrl = 'https://eugm1204.github.io/nutritrack/';
+  static const showAppleLogin = false;
 
   static bool get isConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 }

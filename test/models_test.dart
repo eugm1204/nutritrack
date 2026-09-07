@@ -183,7 +183,7 @@ expect(meal.items, isEmpty);
       expect(profile.onboardingCompleted, isTrue);
     });
 
-    test('macro goals roundtrip json', () {
+test('macro goals roundtrip json', () {
       const profile = Profile(
         id: 'u1',
         proteinGoalG: 120,
@@ -194,6 +194,14 @@ expect(meal.items, isEmpty);
       expect(decoded.proteinGoalG, 120);
       expect(decoded.carbsGoalG, 250);
       expect(decoded.fatGoalG, 70);
+    });
+
+    test('water goal defaults and roundtrips', () {
+      const profile = Profile(id: 'u1');
+      expect(profile.waterGoalCups, 8);
+      final custom = Profile(id: 'u1', waterGoalCups: 12);
+      final decoded = Profile.fromJson(custom.toJson());
+      expect(decoded.waterGoalCups, 12);
     });
 
 test('serializes birth date as ISO date', () {

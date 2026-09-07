@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/meal.dart';
 import '../../providers/providers.dart';
@@ -19,6 +18,7 @@ class DashboardState {
   final int? fatGoalG;
   final int streakDays;
   final int waterCups;
+  final int waterGoalCups;
   final List<FavoriteMeal> favorites;
   final String objective;
   final String? avatarUrl;
@@ -37,6 +37,7 @@ class DashboardState {
     this.fatGoalG,
     this.streakDays = 0,
     this.waterCups = 0,
+    this.waterGoalCups = 8,
     this.favorites = const [],
     this.objective = 'maintain',
     this.avatarUrl,
@@ -61,8 +62,6 @@ class DashboardState {
 }
 
 class DashboardController extends AsyncNotifier<DashboardState> {
-  static const _waterKey = 'water_';
-
   @override
   Future<DashboardState> build() => _load(DateTime.now());
 
@@ -91,7 +90,9 @@ class DashboardController extends AsyncNotifier<DashboardState> {
     }
 
     final streak = await _computeStreak(userId);
-    final water = await _loadWater(today);
+    final water = await ref
+        .read(waterRepositoryProvider)
+        .fetchCups(userId, today);
     final favorites = await ref.read(favoritesServiceProvider).load();
 
     return DashboardState(
@@ -108,6 +109,7 @@ class DashboardController extends AsyncNotifier<DashboardState> {
       fatGoalG: profile.fatGoalG,
       streakDays: streak,
       waterCups: water,
+      waterGoalCups: profile.waterGoalCups,
       favorites: favorites,
       objective: profile.objective,
       avatarUrl: profile.avatarUrl,
@@ -143,19 +145,11 @@ class DashboardController extends AsyncNotifier<DashboardState> {
     return streak;
   }
 
-  Future<int> _loadWater(DateTime date) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = '$_waterKey${date.year}-${date.month}-${date.day}';
-    return prefs.getInt(key) ?? 0;
-  }
-
   Future<void> _saveWater(int cups) async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    await prefs.setInt(
-      '$_waterKey${now.year}-${now.month}-${now.day}',
-      cups,
-    );
+    final userId = ref.read(supabaseProvider).auth.currentUser!.id;
+    await ref
+        .read(waterRepositoryProvider)
+        .setCups(userId, DateTime.now(), cups);
   }
 
   Future<void> addWater() async {
@@ -218,6 +212,7 @@ extension on AsyncValue<DashboardState> {
       fatGoalG: value.fatGoalG,
       streakDays: value.streakDays,
       waterCups: waterCups ?? value.waterCups,
+      waterGoalCups: value.waterGoalCups,
       favorites: favorites ?? value.favorites,
       objective: value.objective,
       avatarUrl: value.avatarUrl,

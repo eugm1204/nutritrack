@@ -90,8 +90,9 @@ Widget build(BuildContext context, WidgetRef ref) {
                   else
                     ..._mealGroups(state.meals, context, ref),
                   const SizedBox(height: 24),
-                  _WaterCard(
+_WaterCard(
                     cups: state.waterCups,
+                    goalCups: state.waterGoalCups,
                     onAdd: () =>
                         ref.read(dashboardControllerProvider.notifier).addWater(),
                     onRemove: () => ref
@@ -837,20 +838,21 @@ class _LegendDot extends StatelessWidget {
 
 class _WaterCard extends StatelessWidget {
   final int cups;
+  final int goalCups;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
 
   const _WaterCard({
     required this.cups,
+    required this.goalCups,
     required this.onAdd,
     required this.onRemove,
   });
 
-  static const _goal = 8;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final goal = goalCups <= 0 ? 8 : goalCups;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -874,7 +876,7 @@ class _WaterCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(3),
                   child: LinearProgressIndicator(
-                    value: (cups / _goal).clamp(0.0, 1.0),
+                    value: (cups / goal).clamp(0.0, 1.0),
                     minHeight: 5,
                     color: appWaterBlue,
                     backgroundColor: theme.colorScheme.surfaceContainerHighest,
@@ -882,7 +884,7 @@ class _WaterCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$cups/$_goal copos · ${cups * 250} ml',
+                  '$cups/$goal copos · ${cups * 250} ml',
                   style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],

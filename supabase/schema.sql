@@ -1,4 +1,4 @@
--- NutriTrack: schema + RLS
+﻿-- NutriTrack: schema + RLS
 -- Corre no SQL Editor do Supabase.
 
 create table if not exists public.profiles (
@@ -12,6 +12,7 @@ create table if not exists public.profiles (
   height_cm real,
   activity_level text,
   target_weight_kg real,
+  water_goal_cups int not null default 8,
   protein_goal_g int,
   carbs_goal_g int,
   fat_goal_g int,
@@ -35,6 +36,15 @@ create table if not exists public.custom_foods (
 );
 
 create index if not exists custom_foods_user_idx on public.custom_foods (user_id);
+
+create table if not exists public.water_logs (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  log_date date not null,
+  cups int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, log_date)
+);
 
 create table if not exists public.error_logs (
   id bigint generated always as identity primary key,
@@ -149,3 +159,18 @@ create policy "avatars_update_own" on storage.objects
   for update using (
     bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- Água sincronizada
+alter table public.water_logs enable row level security;
+
+drop policy if exists "water_logs_select_own" on public.water_logs;
+create policy "water_logs_select_own" on public.water_logs
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "water_logs_insert_own" on public.water_logs;
+create policy "water_logs_insert_own" on public.water_logs
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "water_logs_update_own" on public.water_logs;
+create policy "water_logs_update_own" on public.water_logs
+  for update using (auth.uid() = user_id);

@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config.dart';
 import '../../core/theme.dart';
 import 'auth_controller.dart';
 
@@ -42,6 +43,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (authState.signupPendingEmail) {
         setState(() => _isSignUp = false);
       }
+    }
+  }
+
+Future<void> _signInWithGoogle() async {
+    final ok = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(authControllerProvider).error ?? 'Erro ao entrar com Google.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    final ok = await ref.read(authControllerProvider.notifier).signInWithApple();
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(authControllerProvider).error ?? 'Erro ao entrar com Apple.',
+          ),
+        ),
+      );
     }
   }
 
@@ -132,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           )
                         : Text(_isSignUp ? 'Criar conta' : 'Entrar'),
                   ),
-                  const SizedBox(height: 12),
+const SizedBox(height: 12),
                   TextButton(
                     onPressed: loading
                         ? null
@@ -143,10 +170,126 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           : 'Não tens conta? Regista-te',
                     ),
                   ),
+                  if (!_isSignUp) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'ou',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _GoogleButton(
+                      onPressed: loading ? null : _signInWithGoogle,
+                    ),
+                    if (AppConfig.showAppleLogin) ...[
+                      const SizedBox(height: 10),
+                      _AppleButton(
+                        onPressed: loading ? null : _signInWithApple,
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+class _GoogleButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _GoogleButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: theme.colorScheme.surface,
+          foregroundColor: theme.colorScheme.onSurface,
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color(0xFF4285F4),
+                shape: BoxShape.circle,
+              ),
+              child: const Text(
+                'G',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Continuar com Google',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AppleButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _AppleButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.apple, size: 20),
+            const SizedBox(width: 10),
+            const Text(
+              'Continuar com Apple',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
     );

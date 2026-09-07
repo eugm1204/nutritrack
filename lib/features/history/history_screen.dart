@@ -7,7 +7,6 @@ import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../widgets/animated_list_item.dart';
 import '../../widgets/coach_sheet.dart';
-import '../../widgets/meal_card.dart';
 import '../../widgets/pressable_card.dart';
 import 'history_controller.dart';
 
@@ -19,8 +18,6 @@ class HistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
-  DateTime? _expandedDay;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -46,7 +43,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                if (state.insights.hasData) ...[
+if (state.insights.hasData) ...[
                   _InsightsCard(
                     insights: state.insights,
                     onCoach: () => showModalBottomSheet<void>(
@@ -56,6 +53,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  _MacrosWeekCard(state: state),
+                  const SizedBox(height: 16),
                 ],
                 for (var i = 0; i < days.length; i++) ...[
                   AnimatedListItem(
@@ -64,10 +63,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       day: days[i],
                       meals: state.mealsByDay[days[i]]!,
                       goalCalories: state.goalCalories,
-                      expanded: _expandedDay == days[i],
-                      onTap: () => setState(() {
-                        _expandedDay = _expandedDay == days[i] ? null : days[i];
-                      }),
+                      onTap: () => context.push('/day', extra: days[i]),
                       onDelete: (meal) => ref
                           .read(historyControllerProvider.notifier)
                           .deleteMeal(meal.id),
@@ -280,10 +276,9 @@ class _InsightTile extends StatelessWidget {
 }
 
 class _DayCard extends StatelessWidget {
-  final DateTime day;
+final DateTime day;
   final List<Meal> meals;
   final int goalCalories;
-  final bool expanded;
   final VoidCallback onTap;
   final void Function(Meal) onDelete;
 
@@ -291,7 +286,6 @@ class _DayCard extends StatelessWidget {
     required this.day,
     required this.meals,
     required this.goalCalories,
-    required this.expanded,
     required this.onTap,
     required this.onDelete,
   });
@@ -358,9 +352,9 @@ class _DayCard extends StatelessWidget {
                 ' kcal',
                 style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
               ),
-              const SizedBox(width: 4),
+const SizedBox(width: 4),
               Icon(
-                expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                Icons.chevron_right,
                 color: theme.colorScheme.onSurfaceVariant,
                 size: 20,
               ),
@@ -376,19 +370,6 @@ class _DayCard extends StatelessWidget {
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           ),
-          if (expanded) ...[
-            const SizedBox(height: 14),
-            for (final meal in meals)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: MealCard(
-                  meal: meal,
-                  showHero: false,
-                  onTap: () => context.push('/meal', extra: meal),
-                  onDelete: () => onDelete(meal),
-                ),
-              ),
-          ],
         ],
       ),
     );
@@ -475,6 +456,120 @@ class _PhotoStack extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _MacrosWeekCard extends StatelessWidget {
+  final HistoryState state;
+
+  const _MacrosWeekCard({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Macros da semana', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 12),
+          _MacroWeekRow(
+            label: 'Proteína',
+            avg: state.avgProtein,
+            goal: state.proteinGoalG,
+            color: macroProteinColor,
+          ),
+          const SizedBox(height: 8),
+          _MacroWeekRow(
+            label: 'Hidratos',
+            avg: state.avgCarbs,
+            goal: state.carbsGoalG,
+            color: macroCarbsColor,
+          ),
+          const SizedBox(height: 8),
+          _MacroWeekRow(
+            label: 'Gordura',
+            avg: state.avgFat,
+            goal: state.fatGoalG,
+            color: macroFatColor,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Média por dia nos últimos 7 dias.',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MacroWeekRow extends StatelessWidget {
+  final String label;
+  final double avg;
+  final int? goal;
+  final Color color;
+
+  const _MacroWeekRow({
+    required this.label,
+    required this.avg,
+    required this.goal,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final progress =
+        goal == null || goal! <= 0 ? 0.0 : (avg / goal!).clamp(0.0, 1.0);
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 64,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              color: color,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 70,
+          child: Text(
+            goal != null
+                ? '/g'
+                : 'g/dia',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
