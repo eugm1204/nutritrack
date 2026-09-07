@@ -36,6 +36,7 @@ class MealRepository {
     required String mealName,
     required List<MealItem> items,
     required DateTime consumedAt,
+    String? notes,
   }) async {
     final total = items.fold<int>(0, (sum, item) => sum + item.calories);
 
@@ -48,6 +49,7 @@ class MealRepository {
           'total_calories': total,
           'items': items.map((e) => e.toJson()).toList(),
           'consumed_at': consumedAt.toUtc().toIso8601String(),
+          if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
         })
         .select()
         .single();
@@ -60,6 +62,7 @@ class MealRepository {
     required String userId,
     required String mealName,
     required List<MealItem> items,
+    String? notes,
   }) async {
     final total = items.fold<int>(0, (sum, item) => sum + item.calories);
 
@@ -69,6 +72,7 @@ class MealRepository {
           'meal_name': mealName,
           'total_calories': total,
           'items': items.map((e) => e.toJson()).toList(),
+          if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
         })
         .eq('id', mealId)
         .eq('user_id', userId)

@@ -1,11 +1,14 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../core/theme.dart';
 import 'pressable_card.dart';
+
 class MealCard extends StatelessWidget {
   final dynamic meal;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final void Function(DateTime date)? onDuplicate;
   final bool showHero;
 
   const MealCard({
@@ -13,6 +16,7 @@ class MealCard extends StatelessWidget {
     required this.meal,
     required this.onTap,
     required this.onDelete,
+    this.onDuplicate,
     this.showHero = true,
   });
 
@@ -21,7 +25,9 @@ class MealCard extends StatelessWidget {
     final theme = Theme.of(context);
     return PressableCard(
       onTap: onTap,
-      onLongPress: () => _confirmDelete(context),
+      onLongPress: onDuplicate != null
+          ? () => _showActions(context)
+          : () => _confirmDelete(context),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
@@ -75,6 +81,47 @@ class MealCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showActions(BuildContext context) async {
+    final action = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(meal.mealName),
+        children: [
+          ListTile(
+            leading: const Icon(Icons.copy_outlined),
+            title: const Text('Duplicar para outro dia'),
+            onTap: () => Navigator.pop(context, 'duplicate'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: appRed),
+            title: Text(
+              'Apagar',
+              style: TextStyle(color: appRed),
+            ),
+            onTap: () => Navigator.pop(context, 'delete'),
+          ),
+        ],
+      ),
+    );
+    if (action == 'delete' && context.mounted) {
+      await _confirmDelete(context);
+    } else if (action == 'duplicate' && context.mounted) {
+      final now = DateTime.now();
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: now,
+        firstDate: now.subtract(const Duration(days: 365)),
+        lastDate: now,
+        helpText: 'Duplicar para',
+        cancelText: 'Cancelar',
+        confirmText: 'Duplicar',
+      );
+      if (picked != null) {
+        onDuplicate!(picked);
+      }
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

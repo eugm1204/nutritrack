@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme.dart';
+import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
 import '../../services/favorites_service.dart';
 import '../../widgets/animated_list_item.dart';
@@ -13,6 +14,7 @@ import '../../widgets/celebration_dialog.dart';
 import '../../widgets/count_up_text.dart';
 import '../../widgets/meal_card.dart';
 import '../../widgets/suggestion_sheet.dart';
+import '../history/history_controller.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'dashboard_controller.dart';
 
@@ -157,11 +159,12 @@ List<Widget> _mealGroups(
                   .read(dashboardControllerProvider.notifier)
                   .deleteMeal(meal.id),
               background: _DeleteBackground(),
-              child: MealCard(
+child: MealCard(
                 meal: meal,
                 onTap: () => context.push('/meal', extra: meal),
                 onDelete: () =>
                     ref.read(dashboardControllerProvider.notifier).deleteMeal(meal.id),
+                onDuplicate: (date) => _duplicateMeal(ref, meal, date),
               ),
             ),
           ),
@@ -171,11 +174,37 @@ List<Widget> _mealGroups(
     return widgets;
   }
 
-  static String _greeting() {
+static String _greeting() {
     final h = DateTime.now().hour;
     if (h < 12) return 'Bom dia,';
     if (h < 19) return 'Boa tarde,';
     return 'Boa noite,';
+  }
+}
+
+Future<void> _duplicateMeal(WidgetRef ref, dynamic meal, DateTime date) async {
+  try {
+    final user = ref.read(supabaseProvider).auth.currentUser;
+    if (user == null) return;
+    final consumedAt = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      meal.consumedAt.hour,
+      meal.consumedAt.minute,
+    );
+    await ref.read(mealRepositoryProvider).insertMeal(
+          userId: user.id,
+          imageUrl: meal.imageUrl,
+          mealName: meal.mealName,
+          items: List<MealItem>.from(meal.items as List),
+          consumedAt: consumedAt,
+          notes: meal.notes,
+        );
+    ref.invalidate(dashboardControllerProvider);
+    ref.invalidate(historyControllerProvider);
+  } catch (e) {
+    debugPrint('[duplicateMeal] Erro: $e');
   }
 }
 

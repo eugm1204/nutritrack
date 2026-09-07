@@ -7,6 +7,8 @@ import '../../core/theme.dart';
 import '../../models/meal.dart';
 import '../../providers/providers.dart';
 import '../../widgets/meal_card.dart';
+import '../dashboard/dashboard_controller.dart';
+import '../history/history_controller.dart';
 
 class DayScreen extends ConsumerStatefulWidget {
   final DateTime date;
@@ -86,6 +88,38 @@ class _DayScreenState extends ConsumerState<DayScreen> {
     if (user == null) return;
     await ref.read(mealRepositoryProvider).deleteMeal(meal.id, user.id);
     await _load();
+  }
+
+  Future<void> _duplicateMeal(Meal meal, DateTime date) async {
+    try {
+      final user = ref.read(supabaseProvider).auth.currentUser;
+      if (user == null) return;
+      final consumedAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        meal.consumedAt.hour,
+        meal.consumedAt.minute,
+      );
+      await ref.read(mealRepositoryProvider).insertMeal(
+            userId: user.id,
+            imageUrl: meal.imageUrl,
+            mealName: meal.mealName,
+            items: meal.items,
+            consumedAt: consumedAt,
+            notes: meal.notes,
+          );
+      ref.invalidate(dashboardControllerProvider);
+      ref.invalidate(historyControllerProvider);
+      await _load();
+    } catch (e) {
+      debugPrint('[day/duplicate] Erro: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível duplicar a refeição.')),
+        );
+      }
+    }
   }
 
   @override
@@ -241,6 +275,7 @@ class _DayScreenState extends ConsumerState<DayScreen> {
                               meal: meal,
                               onTap: () => context.push('/meal', extra: meal),
                               onDelete: () => _deleteMeal(meal),
+                              onDuplicate: (date) => _duplicateMeal(meal, date),
                             ),
                           ),
                     ],

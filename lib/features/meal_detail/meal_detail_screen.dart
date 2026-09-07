@@ -7,6 +7,7 @@ import '../../models/meal.dart';
 import '../../models/meal_item.dart';
 import '../../providers/providers.dart';
 import '../../services/favorites_service.dart';
+import '../../widgets/add_item_sheet.dart';
 import '../../widgets/portion_control.dart';
 import '../add_meal/editable_item_tile.dart';
 import '../dashboard/dashboard_controller.dart';
@@ -22,6 +23,7 @@ class MealDetailScreen extends ConsumerStatefulWidget {
 
 class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
   late final TextEditingController _nameController;
+  late final TextEditingController _notesController;
   late List<MealItem> _items;
   late List<MealItem> _baseItems;
   bool _saving = false;
@@ -33,9 +35,31 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.meal.mealName);
+    _notesController = TextEditingController(text: widget.meal.notes ?? '');
     _items = [...widget.meal.items];
     _baseItems = [...widget.meal.items];
     _loadFavoriteStatus();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _openAddFoodSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => AddItemSheet(
+        onAdd: (item) => setState(() {
+          _items.add(item);
+          _baseItems.add(item);
+        }),
+      ),
+    );
   }
 
   Future<void> _loadFavoriteStatus() async {
@@ -63,13 +87,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
           content: Text(isFav ? 'Adicionada às favoritas ⭐' : 'Removida das favoritas'),
         ),
       );
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
+}
   }
 
   int get _total => _items.fold(0, (sum, item) => sum + item.calories);
@@ -78,7 +96,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
   double get _totalCarbs => _items.fold(0, (sum, item) => sum + (item.carbs ?? 0));
   double get _totalFat => _items.fold(0, (sum, item) => sum + (item.fat ?? 0));
 
-  Future<void> _save() async {
+Future<void> _save() async {
     setState(() {
       _saving = true;
       _error = null;
@@ -92,6 +110,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                 ? 'Refeição'
                 : _nameController.text.trim(),
             items: _items,
+            notes: _notesController.text,
           );
       ref.invalidate(dashboardControllerProvider);
       if (mounted) Navigator.of(context).pop();
@@ -118,6 +137,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                 : _nameController.text.trim(),
             items: _items,
             consumedAt: DateTime.now(),
+            notes: _notesController.text,
           );
       ref.invalidate(dashboardControllerProvider);
       if (mounted) {
@@ -229,6 +249,15 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                   prefixIcon: Icon(Icons.label_outline),
                 ),
               ),
+const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _openAddFoodSheet,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Adicionar alimento'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(46),
+                ),
+              ),
               const SizedBox(height: 16),
               for (var i = 0; i < _items.length; i++)
                 Padding(
@@ -284,7 +313,7 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+const SizedBox(height: 8),
                       _MacroRow(
                         protein: _totalProtein,
                         carbs: _totalCarbs,
@@ -292,6 +321,17 @@ class _MealDetailScreenState extends ConsumerState<MealDetailScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Notas (opcional)',
+                  prefixIcon: Icon(Icons.notes, size: 18),
+                  hintText: 'ex: jantar fora, treino antes, alergias...',
+                  alignLabelWithHint: true,
                 ),
               ),
               if (_error != null) ...[

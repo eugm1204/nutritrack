@@ -8,6 +8,7 @@ class Meal {
   final int totalCalories;
   final DateTime consumedAt;
   final List<MealItem> items;
+  final String? notes;
 
   const Meal({
     required this.id,
@@ -17,6 +18,7 @@ class Meal {
     required this.totalCalories,
     required this.consumedAt,
     required this.items,
+    this.notes,
   });
 
   factory Meal.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Meal {
       totalCalories: (json['total_calories'] as num?)?.toInt() ?? 0,
       consumedAt: DateTime.tryParse(json['consumed_at'] as String? ?? '')?.toLocal() ?? DateTime.now(),
       items: items,
+      notes: json['notes'] as String?,
     );
   }
 

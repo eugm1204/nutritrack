@@ -90,10 +90,20 @@ void main() {
       expect(meal.items.first.name, 'Arroz');
     });
 
-    test('tolerates empty or null items', () {
+test('tolerates empty or null items', () {
       final meal = Meal.fromJson({'id': 'x', 'user_id': 'u', 'total_calories': 0});
-expect(meal.items, isEmpty);
+      expect(meal.items, isEmpty);
       expect(meal.mealName, 'Refeição');
+    });
+
+    test('parses notes', () {
+      final meal = Meal.fromJson({
+        'id': 'x',
+        'user_id': 'u',
+        'notes': 'jantar fora',
+        'items': [],
+      });
+      expect(meal.notes, 'jantar fora');
     });
   });
 

@@ -62,6 +62,7 @@ create table if not exists public.meals (
   meal_name text not null default 'Refeição',
   total_calories int not null default 0,
   items jsonb not null default '[]'::jsonb,
+  notes text,
   consumed_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
